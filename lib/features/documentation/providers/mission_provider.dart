@@ -63,6 +63,7 @@ class MissionProvider extends ChangeNotifier {
       }
     } finally {
       _isLoading = false;
+      notifyListeners();
     }
   }
 

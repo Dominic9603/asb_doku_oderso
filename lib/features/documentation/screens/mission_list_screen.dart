@@ -29,7 +29,7 @@ class _MissionListScreenState extends State<MissionListScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final provider = context.read<MissionProvider>();
+    final provider = context.watch<MissionProvider>();
 
     return Scaffold(
       appBar: AppBar(

@@ -334,7 +334,155 @@ class DatabaseService {
     'patients': [],
     'abcde_assessments': [],
     'isbar_handovers': [],
+    'vital_signs': [],
+    'measures': [],
   };
+
+  // ── Generische CRUD-Methoden (Web In-Memory + Native SQLite) ──
+
+  Future<void> dbInsert(String table, Map<String, dynamic> values) async {
+    if (_isWeb) {
+      final list = _webTables[table];
+      if (list != null) {
+        final id = values['id'];
+        if (id != null) {
+          final idx = list.indexWhere((r) => r['id'] == id);
+          if (idx >= 0) {
+            list[idx] = Map<String, dynamic>.from(values);
+          } else {
+            list.add(Map<String, dynamic>.from(values));
+          }
+        } else {
+          list.add(Map<String, dynamic>.from(values));
+        }
+      }
+      return;
+    }
+    await _database?.insert(
+      table,
+      values,
+      conflictAlgorithm: sqflite.ConflictAlgorithm.replace,
+    );
+  }
+
+  Future<List<Map<String, dynamic>>> dbQuery(
+    String table, {
+    String? where,
+    List<Object?>? whereArgs,
+    String? orderBy,
+  }) async {
+    if (_isWeb) {
+      var rows = List<Map<String, dynamic>>.from(_webTables[table] ?? []);
+      if (where != null && whereArgs != null) {
+        rows = _filterWebRows(rows, where, whereArgs);
+      }
+      if (orderBy != null) {
+        rows = _sortWebRows(rows, orderBy);
+      }
+      return rows;
+    }
+    return await _database?.query(
+          table,
+          where: where,
+          whereArgs: whereArgs,
+          orderBy: orderBy,
+        ) ??
+        [];
+  }
+
+  Future<void> dbDelete(
+    String table, {
+    String? where,
+    List<Object?>? whereArgs,
+  }) async {
+    if (_isWeb) {
+      final list = _webTables[table];
+      if (list != null && where != null && whereArgs != null) {
+        _webTables[table] =
+            list.where((r) => !_matchesWhere(r, where, whereArgs)).toList();
+      }
+      return;
+    }
+    await _database?.delete(table, where: where, whereArgs: whereArgs);
+  }
+
+  List<Map<String, dynamic>> _filterWebRows(
+    List<Map<String, dynamic>> rows,
+    String where,
+    List<Object?> whereArgs,
+  ) {
+    final parts =
+        where.trim().split(RegExp(r'\s+AND\s+', caseSensitive: false));
+    var filtered = rows;
+    int argIndex = 0;
+    for (final part in parts) {
+      final match = RegExp(r'(\w+)\s*=\s*\?').firstMatch(part.trim());
+      if (match != null && argIndex < whereArgs.length) {
+        final field = match.group(1)!;
+        final value = whereArgs[argIndex++];
+        filtered = filtered
+            .where((r) => r[field]?.toString() == value?.toString())
+            .toList();
+      }
+    }
+    return filtered;
+  }
+
+  bool _matchesWhere(
+    Map<String, dynamic> row,
+    String where,
+    List<Object?> whereArgs,
+  ) {
+    final parts =
+        where.trim().split(RegExp(r'\s+AND\s+', caseSensitive: false));
+    int argIndex = 0;
+    for (final part in parts) {
+      final match = RegExp(r'(\w+)\s*=\s*\?').firstMatch(part.trim());
+      if (match != null && argIndex < whereArgs.length) {
+        final field = match.group(1)!;
+        final value = whereArgs[argIndex++];
+        if (row[field]?.toString() != value?.toString()) return false;
+      }
+    }
+    return true;
+  }
+
+  List<Map<String, dynamic>> _sortWebRows(
+    List<Map<String, dynamic>> rows,
+    String orderBy,
+  ) {
+    final parts = orderBy.split(',');
+    final criteria = <({String field, bool desc})>[];
+    for (final part in parts) {
+      final t = part.trim();
+      final isDesc = t.toUpperCase().contains(' DESC');
+      final field =
+          t.replaceAll(RegExp(r'\s+(ASC|DESC).*$', caseSensitive: false), '').trim();
+      criteria.add((field: field, desc: isDesc));
+    }
+    final sorted = List<Map<String, dynamic>>.from(rows);
+    sorted.sort((a, b) {
+      for (final c in criteria) {
+        final av = a[c.field];
+        final bv = b[c.field];
+        int cmp;
+        if (av == null && bv == null) {
+          cmp = 0;
+        } else if (av == null) {
+          cmp = -1;
+        } else if (bv == null) {
+          cmp = 1;
+        } else if (av is num && bv is num) {
+          cmp = av.compareTo(bv);
+        } else {
+          cmp = av.toString().compareTo(bv.toString());
+        }
+        if (cmp != 0) return c.desc ? -cmp : cmp;
+      }
+      return 0;
+    });
+    return sorted;
+  }
 
   Future<void> insertMedication(Medication med) async {
     if (_isWeb) {
