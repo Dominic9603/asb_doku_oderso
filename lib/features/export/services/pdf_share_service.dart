@@ -21,14 +21,14 @@ class PdfShareService {
 
     // Temporäre Datei schreiben
     final tempDir = await getTemporaryDirectory();
-    final file = File('\${tempDir.path}/\$fileName');
+    final file = File('${tempDir.path}/$fileName');
     await file.writeAsBytes(pdfBytes);
 
     // Nativen Teilen-Dialog öffnen
     await Share.shareXFiles(
       [XFile(file.path, mimeType: 'application/pdf')],
-      subject: 'Einsatzbericht - \$missionNumber',
-      text: 'Einsatzbericht \$missionNumber\n\nGesendet aus RescueDoc',
+      subject: 'Einsatzbericht - $missionNumber',
+      text: 'Einsatzbericht $missionNumber\n\nGesendet aus RescueDoc',
     );
   }
 }
