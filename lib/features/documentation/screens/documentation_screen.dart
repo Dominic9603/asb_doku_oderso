@@ -87,22 +87,8 @@ class _DocumentationScreenState extends State<DocumentationScreen>
     }
   }
 
-  /// PDF generieren → Supabase hochladen → Email mit Link senden
+  /// PDF generieren und nativen Teilen-Dialog öffnen
   Future<void> _sendPdfViaEmail() async {
-    // Prüfe ob Supabase konfiguriert ist
-    if (AppConfig.supabaseUrl == 'DEINE_SUPABASE_URL') {
-      if (mounted) {
-        scaffoldMessengerKey.currentState?.showSnackBar(
-          const SnackBar(
-            content: Text('Supabase ist noch nicht konfiguriert.\n'
-                'Bitte URL und Key in app_constants.dart eintragen.'),
-            duration: Duration(seconds: 4),
-          ),
-        );
-      }
-      return;
-    }
-
     try {
       final provider = context.read<MissionProvider>();
       final mission = provider.currentMission;
@@ -111,21 +97,6 @@ class _DocumentationScreenState extends State<DocumentationScreen>
       // Lade UserInfo
       final licenseService = context.read<LicenseService>();
       final userInfo = await licenseService.getUserInfo();
-
-      // Prüfe ob Email konfiguriert
-      final recipientEmail = userInfo?.recipientEmail ?? '';
-      if (recipientEmail.isEmpty) {
-        if (mounted) {
-          scaffoldMessengerKey.currentState?.showSnackBar(
-            const SnackBar(
-              content: Text('Keine Empfänger-Email hinterlegt.\n'
-                  'Bitte im Setup-Screen eine Email-Adresse eintragen.'),
-              duration: Duration(seconds: 4),
-            ),
-          );
-        }
-        return;
-      }
 
       // Ladeindikator
       if (mounted) {
@@ -142,7 +113,7 @@ class _DocumentationScreenState extends State<DocumentationScreen>
                   ),
                 ),
                 SizedBox(width: 12),
-                Text('PDF wird hochgeladen…'),
+                Text('PDF wird erstellt…'),
               ],
             ),
             duration: Duration(seconds: 10),
@@ -162,32 +133,25 @@ class _DocumentationScreenState extends State<DocumentationScreen>
 
       final missionNr = mission.missionNumber ?? mission.id.substring(0, 8);
 
-      // Upload + Email öffnen
-      await PdfShareService.uploadAndSendEmail(
+      // Teilen-Dialog öffnen
+      await PdfShareService.sharePdf(
         pdfBytes: pdfBytes,
         missionNumber: missionNr,
-        recipientEmail: recipientEmail,
       );
 
       if (mounted) {
         scaffoldMessengerKey.currentState?.hideCurrentSnackBar();
-        scaffoldMessengerKey.currentState?.showSnackBar(
-          const SnackBar(
-            content: Text('✓ Link erstellt & Email vorbereitet (30 Min. gültig)'),
-            backgroundColor: AppColors.success,
-          ),
-        );
       }
     } catch (e) {
       if (mounted) {
         scaffoldMessengerKey.currentState?.hideCurrentSnackBar();
         scaffoldMessengerKey.currentState?.showSnackBar(
-          SnackBar(content: Text('Fehler beim Email-Versand: $e')),
+          SnackBar(content: Text('Fehler beim Erstellen der PDF: $e')),
         );
       }
     }
   }
-  
+
   @override
   Widget build(BuildContext context) {
     if (_loading) {
