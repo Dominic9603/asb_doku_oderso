@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:provider/provider.dart';
@@ -12,6 +13,7 @@ import 'features/documentation/screens/mission_list_screen.dart';
 import 'features/documentation/screens/new_mission_screen.dart';
 import 'features/medications/screens/medication_list_screen.dart';
 import 'features/guidelines/screens/guidelines_screen.dart';
+import 'features/landing/screens/web_landing_screen.dart';
 
 
 class RescueDocApp extends StatefulWidget {
@@ -22,6 +24,9 @@ class RescueDocApp extends StatefulWidget {
 }
 
 class _RescueDocAppState extends State<RescueDocApp> {
+  // Auf Web: zuerst Landing-Screen zeigen
+  bool _showLanding = kIsWeb;
+
   @override
   Widget build(BuildContext context) {
     final theme = context.watch<ThemeProvider>();
@@ -46,7 +51,11 @@ class _RescueDocAppState extends State<RescueDocApp> {
       ],
       locale: const Locale('de', 'DE'),
       
-      home: _buildHome(context),
+      home: _showLanding
+          ? WebLandingScreen(
+              onEnterApp: () => setState(() => _showLanding = false),
+            )
+          : _buildHome(context),
       routes: {
         '/missions': (context) => const MissionListScreen(),
         '/new-mission': (context) => const NewMissionScreen(),
