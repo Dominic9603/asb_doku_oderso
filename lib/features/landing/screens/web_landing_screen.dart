@@ -19,7 +19,7 @@ class _WebLandingScreenState extends State<WebLandingScreen> {
   String? _selected;
 
   static const _apkUrl =
-      'https://github.com/Dominic9603/asb_doku_oderso/releases/latest';
+      'https://github.com/Dominic9603/asb_doku_oderso/releases/latest/download/RescueDoc.apk';
 
   @override
   Widget build(BuildContext context) {

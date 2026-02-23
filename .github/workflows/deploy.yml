@@ -65,10 +65,10 @@ jobs:
         run: flutter build apk --release
 
       - name: APK umbenennen
-        run: mv build/app/outputs/flutter-apk/app-release.apk RescueDoc-${{ github.ref_name }}.apk
+        run: mv build/app/outputs/flutter-apk/app-release.apk RescueDoc.apk
 
       - name: GitHub Release erstellen
         uses: softprops/action-gh-release@v2
         with:
-          files: RescueDoc-${{ github.ref_name }}.apk
+          files: RescueDoc.apk
           generate_release_notes: true
