@@ -6,7 +6,7 @@ plugins {
 }
 
 android {
-    namespace = "de.rescuedoc.app"
+    namespace = "com.example.rescue_doc"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 
