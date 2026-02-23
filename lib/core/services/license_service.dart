@@ -70,9 +70,12 @@ class LicenseService {
       final body = response.body.trim();
       late Map<String, dynamic> data;
       try {
-        data = jsonDecode(body) as Map<String, dynamic>;
+        // Fehlende äußere geschweifte Klammern ergänzen (falls Gist sie weglässt)
+        var fixedBody = body;
+        if (!fixedBody.startsWith('{')) fixedBody = '{$fixedBody}';
+        if (!fixedBody.endsWith('}')) fixedBody = '$fixedBody}';
+        data = jsonDecode(fixedBody) as Map<String, dynamic>;
       } catch (_) {
-        // Zeige die ersten 200 Zeichen der Antwort für Diagnose
         final preview = body.length > 200 ? body.substring(0, 200) : body;
         throw Exception('JSON-Fehler. Antwort: $preview');
       }
