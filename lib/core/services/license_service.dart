@@ -67,7 +67,15 @@ class LicenseService {
         throw Exception('Server-Fehler (${response.statusCode})');
       }
 
-      final data = jsonDecode(response.body);
+      final body = response.body.trim();
+      late Map<String, dynamic> data;
+      try {
+        data = jsonDecode(body) as Map<String, dynamic>;
+      } catch (_) {
+        // Zeige die ersten 200 Zeichen der Antwort für Diagnose
+        final preview = body.length > 200 ? body.substring(0, 200) : body;
+        throw Exception('JSON-Fehler. Antwort: $preview');
+      }
       final List<dynamic> keyList = data['keys'] ?? [];
       return keyList.map((k) => k.toString().trim().toUpperCase()).toSet();
     } catch (e) {
