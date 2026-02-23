@@ -3,6 +3,7 @@ name: Build & Deploy
 on:
   push:
     branches: [main]
+    tags: ['v*']
 
 # Erlaubt GitHub Pages Deployment
 permissions:
@@ -14,6 +15,7 @@ jobs:
   # ── Web Build → GitHub Pages ──────────────────────────────────────────────
   deploy-web:
     runs-on: ubuntu-latest
+    if: github.ref_type == 'branch'
     steps:
       - uses: actions/checkout@v4
 
