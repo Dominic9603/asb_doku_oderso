@@ -53,8 +53,8 @@ class LicenseService {
   /// Lädt die Liste gültiger Keys von GitHub
   Future<Set<String>> _fetchValidKeys() async {
     final url = AppConfig.keysUrl;
-    if (url == 'https://gist.githubusercontent.com/Dominic9603/34bb50d8d637916c99703f00de0e35ff/raw/fa7524f29fab05498fa6d7416dd842993517fc0e/keys.json') {
-      throw Exception('Seriennummer ungültig!');
+    if (url.isEmpty || url.startsWith('DEINE_')) {
+      throw Exception('Keys-URL nicht konfiguriert');
     }
 
     try {
