@@ -1,0 +1,73 @@
+name: Build & Deploy
+
+on:
+  push:
+    branches: [main]
+
+# Erlaubt GitHub Pages Deployment
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+jobs:
+  # ── Web Build → GitHub Pages ──────────────────────────────────────────────
+  deploy-web:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Flutter einrichten
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.27.4'
+          channel: stable
+          cache: true
+
+      - name: Abhängigkeiten installieren
+        run: flutter pub get
+
+      - name: Web bauen
+        run: flutter build web --release --base-href "/asb_doku_oderso/"
+
+      - name: Auf GitHub Pages deployen
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./build/web
+
+  # ── Android APK Build → GitHub Release ────────────────────────────────────
+  build-apk:
+    runs-on: ubuntu-latest
+    # Nur wenn ein Tag gepusht wird (z.B. v1.0.1)
+    if: startsWith(github.ref, 'refs/tags/')
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Java einrichten
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Flutter einrichten
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.27.4'
+          channel: stable
+          cache: true
+
+      - name: Abhängigkeiten installieren
+        run: flutter pub get
+
+      - name: APK bauen
+        run: flutter build apk --release
+
+      - name: APK umbenennen
+        run: mv build/app/outputs/flutter-apk/app-release.apk RescueDoc-${{ github.ref_name }}.apk
+
+      - name: GitHub Release erstellen
+        uses: softprops/action-gh-release@v2
+        with:
+          files: RescueDoc-${{ github.ref_name }}.apk
+          generate_release_notes: true
