@@ -20,7 +20,7 @@ jobs:
       - name: Flutter einrichten
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.27.4'
+          flutter-version: '3.41.1'
           channel: stable
           cache: true
 
@@ -28,7 +28,7 @@ jobs:
         run: flutter pub get
 
       - name: Web bauen
-        run: flutter build web --release --base-href "/asb_doku_oderso/"
+        run: flutter build web --release --no-wasm-dry-run --base-href "/asb_doku_oderso/"
 
       - name: Auf GitHub Pages deployen
         uses: peaceiris/actions-gh-pages@v4
@@ -53,7 +53,7 @@ jobs:
       - name: Flutter einrichten
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.27.4'
+          flutter-version: '3.41.1'
           channel: stable
           cache: true
 
