@@ -1,6 +1,10 @@
 # Lizenz-Keys (werden in Secret Gist verwaltet)
 tools/keys.json
 
+# Android Keystore (niemals ins Repo!)
+*.jks
+*.keystore
+
 # Miscellaneous
 *.class
 *.log

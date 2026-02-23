@@ -72,8 +72,19 @@ jobs:
       - name: Abhängigkeiten installieren
         run: flutter pub get
 
+      - name: Keystore einrichten
+        run: |
+          echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > android/app/rescue_doc_release.jks
+        env:
+          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+
       - name: APK bauen
         run: flutter build apk --release
+        env:
+          KEYSTORE_PATH: rescue_doc_release.jks
+          KEY_STORE_PASSWORD: ${{ secrets.KEY_STORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
 
       - name: APK umbenennen
         run: mv build/app/outputs/flutter-apk/app-release.apk RescueDoc.apk
