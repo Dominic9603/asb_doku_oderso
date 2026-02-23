@@ -167,7 +167,10 @@ class _C2TabState extends State<C2Tab> {
     final extraParts = <String>[];
 
     if (_pulseLocation != null) {
-      extraParts.add('Puls: $_pulseLocation');
+      final pulseLocationLabel = _pulseLocation == 'beide'
+          ? 'zentral und peripher'
+          : _pulseLocation;
+      extraParts.add('Puls: $pulseLocationLabel');
     }
     if (_rateType != null) {
       extraParts.add('Frequenz: $_rateType');
