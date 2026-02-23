@@ -74,7 +74,8 @@ class LicenseService {
       if (e is Exception && e.toString().contains('Keys-URL nicht konfiguriert')) {
         rethrow;
       }
-      throw Exception('Keine Internetverbindung. Bitte prüfen Sie Ihre Verbindung und versuchen Sie es erneut.');
+      // Echten Fehler weitergeben für bessere Diagnose
+      throw Exception('Verbindungsfehler: $e');
     }
   }
   
