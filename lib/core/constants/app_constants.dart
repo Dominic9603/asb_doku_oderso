@@ -6,7 +6,7 @@ class AppConfig {
   // URL zur keys.json auf GitHub (Raw-URL eines Secret Gist oder Repo)
   // Erstelle ein Secret Gist unter https://gist.github.com
   // Trage hier die Raw-URL ein ("Raw" Button im Gist klicken)
-  static const String keysUrl = 'https://raw.githubusercontent.com/Dominic9603/asb_doku_oderso/main/tools/keys.json';
+  static const String keysUrl = 'https://gist.githubusercontent.com/Dominic9603/34bb50d8d637916c99703f00de0e35ff/raw/keys.json';
 
   // ==================== SUPABASE ====================
   // → Erstelle ein kostenloses Projekt unter https://supabase.com

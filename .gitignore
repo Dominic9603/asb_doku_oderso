@@ -1,3 +1,6 @@
+# Lizenz-Keys (werden in Secret Gist verwaltet)
+tools/keys.json
+
 # Miscellaneous
 *.class
 *.log
