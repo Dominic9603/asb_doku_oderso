@@ -1,0 +1,20 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "Flutter Web Build",
+			"type": "shell",
+			"command": "cd C:\\Users\\Administrator\\rescue_doc && flutter build web 2>&1 | Tee-Object -FilePath C:\\Users\\Administrator\\rescue_doc\\build_log.txt"
+		},
+		{
+			"label": "Flutter Web Build",
+			"type": "shell",
+			"command": "Set-Location C:\\Users\\Administrator\\rescue_doc; flutter build web 2>&1 | Tee-Object -FilePath C:\\Users\\Administrator\\rescue_doc\\build_log.txt"
+		},
+		{
+			"label": "Flutter Web Build",
+			"type": "shell",
+			"command": "flutter build web"
+		}
+	]
+}

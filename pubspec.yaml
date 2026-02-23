@@ -1,0 +1,64 @@
+name: rescue_doc
+description: Professionelle Dokumentations-App für Notfallsanitäter
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+  
+  # Datenbank (SQLite für mobile, Hive für Web als Fallback)
+  sqflite: ^2.3.0
+  hive: ^2.2.3
+  hive_flutter: ^1.1.0
+  path_provider: ^2.1.0
+  path: ^1.9.0
+  
+  # PDF
+  syncfusion_flutter_pdf: ^32.2.5
+  printing: ^5.12.0
+  
+  # State Management
+  provider: ^6.1.0
+  
+  # Validierung
+  formz: ^0.8.0
+  
+  # Sharing & Email
+  share_plus: ^12.0.1
+  url_launcher: ^6.2.0
+  
+  # Lizenzierung
+  flutter_secure_storage: ^10.0.0
+  crypto: ^3.0.3
+  
+  # Web-kompatible Storage-Lösung
+  shared_preferences: ^2.2.2
+
+  # HTTP für Online-Key-Validierung
+  http: ^1.2.0
+
+  # Cloud Storage für PDF-Link-Sharing
+  supabase_flutter: ^2.3.0
+  
+  # UI/UX
+  intl: ^0.20.2
+  flutter_typeahead: ^5.0.0
+  uuid: ^4.3.3
+  
+  cupertino_icons: ^1.0.6
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+  hive_generator: ^2.0.1
+  build_runner: ^2.4.8
+
+flutter:
+  uses-material-design: true
