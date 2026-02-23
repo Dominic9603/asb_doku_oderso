@@ -4,6 +4,7 @@ tools/keys.json
 # Android Keystore (niemals ins Repo!)
 *.jks
 *.keystore
+keystore_base64.txt
 
 # Miscellaneous
 *.class
