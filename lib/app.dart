@@ -24,8 +24,28 @@ class RescueDocApp extends StatefulWidget {
 }
 
 class _RescueDocAppState extends State<RescueDocApp> {
-  // Auf Web: zuerst Landing-Screen zeigen
-  bool _showLanding = kIsWeb;
+  // Auf Web: Landing nur zeigen wenn noch nicht aktiviert
+  bool _showLanding = false;
+  bool _webInitDone = !kIsWeb; // Nativ: direkt bereit; Web: async prüfen
+
+  @override
+  void initState() {
+    super.initState();
+    if (kIsWeb) {
+      WidgetsBinding.instance.addPostFrameCallback((_) async {
+        if (!mounted) return;
+        final licenseService = context.read<LicenseService>();
+        final isActivated = await licenseService.isActivated();
+        if (mounted) {
+          setState(() {
+            // Landing nur zeigen wenn NOCH NICHT aktiviert
+            _showLanding = !isActivated;
+            _webInitDone = true;
+          });
+        }
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -51,11 +71,7 @@ class _RescueDocAppState extends State<RescueDocApp> {
       ],
       locale: const Locale('de', 'DE'),
       
-      home: _showLanding
-          ? WebLandingScreen(
-              onEnterApp: () => setState(() => _showLanding = false),
-            )
-          : _buildHome(context),
+      home: _buildInitialRoute(context),
       routes: {
         '/missions': (context) => const MissionListScreen(),
         '/new-mission': (context) => const NewMissionScreen(),
@@ -63,6 +79,21 @@ class _RescueDocAppState extends State<RescueDocApp> {
         '/guidelines': (context) => const GuidelinesScreen(),
       },
     );
+  }
+
+  /// Entscheidet: Loading / Landing / App
+  Widget _buildInitialRoute(BuildContext context) {
+    // Während Web-Init-Check: Lade-Spinner
+    if (kIsWeb && !_webInitDone) {
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
+    // Landing nur zeigen wenn nicht aktiviert (Web) oder manuell ausgelöst
+    if (_showLanding) {
+      return WebLandingScreen(
+        onEnterApp: () => setState(() => _showLanding = false),
+      );
+    }
+    return _buildHome(context);
   }
 
   /// Baut den Home-Screen basierend auf Aktivierungs- und Setup-Status auf
