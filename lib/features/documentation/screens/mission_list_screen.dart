@@ -36,12 +36,12 @@ class _MissionListScreenState extends State<MissionListScreen> {
         title: const Text('RescueDoc'),
         actions: [
           IconButton(
-          icon: const Icon(Icons.dark_mode),
-          tooltip: 'Nachtmodus',
-          onPressed: () {
-            context.read<ThemeProvider>().toggle();
-          },
-        ),
+            icon: const Icon(Icons.dark_mode),
+            tooltip: 'Nachtmodus',
+            onPressed: () {
+              context.read<ThemeProvider>().toggle();
+            },
+          ),
           IconButton(
             icon: const Icon(Icons.medical_information),
             onPressed: () {
@@ -55,6 +55,13 @@ class _MissionListScreenState extends State<MissionListScreen> {
               Navigator.pushNamed(context, '/guidelines');
             },
             tooltip: 'Richtlinien',
+          ),
+          IconButton(
+            icon: const Icon(Icons.person),
+            onPressed: () {
+              Navigator.pushNamed(context, '/profile');
+            },
+            tooltip: 'Benutzerdaten',
           ),
         ],
       ),

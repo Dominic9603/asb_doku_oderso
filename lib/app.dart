@@ -9,6 +9,7 @@ import 'shared/theme/app_theme.dart';
 import 'shared/theme/theme_provider.dart';
 import 'features/authentication/screens/activation_screen.dart';
 import 'features/authentication/screens/setup_screen.dart';
+import 'features/authentication/screens/profile_screen.dart';
 import 'features/documentation/screens/mission_list_screen.dart';
 import 'features/documentation/screens/new_mission_screen.dart';
 import 'features/medications/screens/medication_list_screen.dart';
@@ -77,6 +78,9 @@ class _RescueDocAppState extends State<RescueDocApp> {
         '/new-mission': (context) => const NewMissionScreen(),
         '/medications': (context) => const MedicationListScreen(),
         '/guidelines': (context) => const GuidelinesScreen(),
+        '/profile': (context) => ProfileScreen(
+          licenseService: context.read<LicenseService>(),
+        ),
       },
     );
   }
