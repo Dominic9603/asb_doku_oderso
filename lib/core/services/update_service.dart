@@ -111,34 +111,70 @@ class UpdateService {
     String url,
     void Function(double progress) onProgress,
   ) async {
-    final dir = await getTemporaryDirectory();
+    // Externe App-Verzeichnis bevorzugen (für FileProvider zugänglich)
+    Directory dir;
+    try {
+      dir = (await getExternalStorageDirectory()) ??
+          await getApplicationDocumentsDirectory();
+    } catch (_) {
+      dir = await getApplicationDocumentsDirectory();
+    }
+
     final apkPath = '${dir.path}/RescueDoc_update.apk';
     final file = File(apkPath);
 
-    final request = http.Request('GET', Uri.parse(url));
-    final response =
-        await request.send().timeout(const Duration(minutes: 10));
+    // Ggf. alte Datei löschen
+    if (await file.exists()) await file.delete();
 
-    final total = response.contentLength ?? -1;
-    int received = 0;
+    // HTTP-Client mit Redirect-Unterstützung
+    final client = http.Client();
+    try {
+      final request = http.Request('GET', Uri.parse(url));
+      request.followRedirects = true;
+      request.maxRedirects = 5;
 
-    final sink = file.openWrite();
-    await for (final chunk in response.stream) {
-      sink.add(chunk);
-      received += chunk.length;
-      if (total > 0) onProgress(received / total);
+      final response = await client
+          .send(request)
+          .timeout(const Duration(minutes: 10));
+
+      if (response.statusCode != 200) {
+        throw Exception('Server-Fehler: HTTP ${response.statusCode}');
+      }
+
+      final total = response.contentLength ?? -1;
+      int received = 0;
+
+      final sink = file.openWrite();
+      await for (final chunk in response.stream) {
+        sink.add(chunk);
+        received += chunk.length;
+        if (total > 0) onProgress(received / total);
+      }
+      await sink.flush();
+      await sink.close();
+    } finally {
+      client.close();
     }
-    await sink.flush();
-    await sink.close();
+
+    // Prüfen ob die Datei wirklich vorhanden und nicht leer ist
+    final fileSize = await file.length();
+    if (fileSize < 1024) {
+      throw Exception(
+          'Heruntergeladene Datei zu klein ($fileSize Bytes) – möglicherweise Redirect-Problem.');
+    }
 
     return apkPath;
   }
 
   /// Öffnet den Android-Paketinstaller für die heruntergeladene APK.
   Future<void> installApk(String apkPath) async {
-    await OpenFile.open(
+    final result = await OpenFile.open(
       apkPath,
       type: 'application/vnd.android.package-archive',
     );
+    // Fehler aus dem open_file-Result auswerten
+    if (result.type != ResultType.done) {
+      throw Exception('Installer-Fehler: ${result.message}');
+    }
   }
 }

@@ -19,7 +19,6 @@ class _CTabState extends State<CTab> {
   bool _externalBleeding = false;
   final _bleedingLocationController = TextEditingController();
   final _bleedingControlController = TextEditingController();
-  final _suspectedDiagnosisController = TextEditingController();
 
   // Zugang (wie in C)
   bool _ivAccess = false;
@@ -47,7 +46,6 @@ class _CTabState extends State<CTab> {
       _externalBleeding = abcde.externalBleeding;
       _bleedingLocationController.text = abcde.bleedingLocation ?? '';
       _bleedingControlController.text = abcde.bleedingControl ?? '';
-      _suspectedDiagnosisController.text = abcde.suspectedDiagnosis ?? '';
 
       final ci = abcde.circulationIntervention ?? '';
       // Zugang aus circulationIntervention rekonstruieren
@@ -73,7 +71,6 @@ class _CTabState extends State<CTab> {
   void dispose() {
     _bleedingLocationController.dispose();
     _bleedingControlController.dispose();
-    _suspectedDiagnosisController.dispose();
     _ivSiteController.dispose();
     super.dispose();
   }
@@ -131,9 +128,6 @@ class _CTabState extends State<CTab> {
       bleedingControl: bleedingControl,
       circulationIntervention: newCirc,
       circulationMedications: medicationsText.isEmpty ? null : medicationsText,
-      suspectedDiagnosis: _suspectedDiagnosisController.text.trim().isEmpty
-          ? null
-          : _suspectedDiagnosisController.text.trim(),
     );
 
       await provider.addOrUpdateABCDE(updated);
@@ -235,19 +229,6 @@ class _CTabState extends State<CTab> {
                   onMedicationsChanged: () {
                     // Widget wird automatisch neu gerendert
                   },
-                ),
-
-                const SizedBox(height: 16),
-
-                // Verdachtsdiagnose
-                TextFormField(
-                  controller: _suspectedDiagnosisController,
-                  decoration: const InputDecoration(
-                    labelText: 'Verdachtsdiagnose',
-                    hintText: 'z.B. NSTEMI, hypertensive Entgleisung …',
-                    prefixIcon: Icon(Icons.search),
-                  ),
-                  maxLines: 2,
                 ),
 
                 const SizedBox(height: 16),

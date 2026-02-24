@@ -55,6 +55,9 @@ class _C2TabState extends State<C2Tab> {
   // Problem / Maßnahmen-Freitext
   final _circulationIssueController = TextEditingController();
 
+  // Verdachtsdiagnose
+  final _suspectedDiagnosisController = TextEditingController();
+
   // Zugang
   bool _ivAccess = false;
   final List<_CannulaSize> _cannulaSizes = const [
@@ -96,6 +99,7 @@ class _C2TabState extends State<C2Tab> {
       }
 
       _circulationIssueController.text = abcde.circulationIssue ?? '';
+      _suspectedDiagnosisController.text = abcde.suspectedDiagnosis ?? '';
 
       // Zugang: im circulationIntervention-Text suchen wir nach Mustern
       final ci = abcde.circulationIntervention ?? '';
@@ -129,6 +133,7 @@ class _C2TabState extends State<C2Tab> {
     _systolicController.dispose();
     _diastolicController.dispose();
     _circulationIssueController.dispose();
+    _suspectedDiagnosisController.dispose();
     _eventDescriptionController.dispose();
     _ivSiteController.dispose();
     super.dispose();
@@ -206,6 +211,9 @@ class _C2TabState extends State<C2Tab> {
       circulationIssue: issue.isEmpty ? null : issue,
       circulationIntervention: intervention.isEmpty ? null : intervention,
       circulationMedications: medicationsText.isEmpty ? null : medicationsText,
+      suspectedDiagnosis: _suspectedDiagnosisController.text.trim().isEmpty
+          ? null
+          : _suspectedDiagnosisController.text.trim(),
       eventDescription: _eventDescriptionController.text.isEmpty
         ? null
         : _eventDescriptionController.text,
@@ -535,6 +543,19 @@ class _C2TabState extends State<C2Tab> {
                     labelText: 'Notfallereignis',
                     hintText: 'z.B. Sturz aus 3 m, Thoraxschmerz, Dyspnoe',
                     prefixIcon: Icon(Icons.report),
+                  ),
+                  maxLines: 2,
+                ),
+
+                const SizedBox(height: 16),
+
+                // Verdachtsdiagnose
+                TextFormField(
+                  controller: _suspectedDiagnosisController,
+                  decoration: const InputDecoration(
+                    labelText: 'Verdachtsdiagnose',
+                    hintText: 'z.B. NSTEMI, Herzinsuffizienz, Sepsis …',
+                    prefixIcon: Icon(Icons.search),
                   ),
                   maxLines: 2,
                 ),
