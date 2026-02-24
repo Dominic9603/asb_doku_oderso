@@ -34,7 +34,7 @@ class PdfShareService {
     } else {
       // Nativ: temporäre Datei schreiben, dann teilen
       final tempDir = await getTemporaryDirectory();
-      final file = File('\${tempDir.path}/$fileName');
+      final file = File('${tempDir.path}/$fileName');
       await file.writeAsBytes(pdfBytes);
       await Share.shareXFiles(
         [XFile(file.path, mimeType: 'application/pdf')],
