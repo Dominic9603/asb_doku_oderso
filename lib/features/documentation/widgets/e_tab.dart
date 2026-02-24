@@ -22,6 +22,7 @@ class _ETabState extends State<ETab> {
   final _envFactorsController = TextEditingController();
   final _exposureIssueController = TextEditingController();
   final _exposureInterventionController = TextEditingController();
+  final _situationNotesController = TextEditingController();
   
   // Medikamente für Exposure (neues System)
   final List<Map<String, dynamic>> _exposureMedications = [];
@@ -38,6 +39,7 @@ class _ETabState extends State<ETab> {
       _envFactorsController.text = abcde.environmentalFactors ?? '';
       _exposureIssueController.text = abcde.exposureIssue ?? '';
       _exposureInterventionController.text = abcde.exposureIntervention ?? '';
+      _situationNotesController.text = abcde.situationNotes ?? '';
 
       // Parse exposureMedications zurück in Liste (JSON oder altes Format)
       _exposureMedications.addAll(
@@ -53,6 +55,7 @@ class _ETabState extends State<ETab> {
     _envFactorsController.dispose();
     _exposureIssueController.dispose();
     _exposureInterventionController.dispose();
+    _situationNotesController.dispose();
     super.dispose();
   }
   
@@ -82,6 +85,9 @@ class _ETabState extends State<ETab> {
       exposureMedications: _exposureMedications.isEmpty
           ? null
           : MedicationSerializer.serialize(_exposureMedications),
+      situationNotes: _situationNotesController.text.isEmpty
+          ? null
+          : _situationNotesController.text,
     );
     
     await provider.addOrUpdateABCDE(updated);
@@ -186,9 +192,26 @@ class _ETabState extends State<ETab> {
                     // Widget wird automatisch neu gerendert
                   },
                 ),
-                
+
                 const SizedBox(height: 16),
-                
+
+                const Divider(),
+
+                const SizedBox(height: 8),
+
+                TextFormField(
+                  controller: _situationNotesController,
+                  decoration: const InputDecoration(
+                    labelText: 'Situation vor Ort / Einsatzablauf / Ergänzungen',
+                    hintText: 'Zusammenfassung des Einsatzgeschehens, besondere Umstände, Anmerkungen …',
+                    prefixIcon: Icon(Icons.description_outlined),
+                    alignLabelWithHint: true,
+                  ),
+                  maxLines: 5,
+                ),
+
+                const SizedBox(height: 16),
+
                 ElevatedButton.icon(
                   onPressed: _save,
                   icon: const Icon(Icons.save),

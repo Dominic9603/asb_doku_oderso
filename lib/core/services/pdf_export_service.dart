@@ -175,37 +175,69 @@ class PDFExportService {
       currentY = _drawMedications(page, assessment.airwayMedications, normalFont, smallFont, margin, currentY, pageWidth);
 
       // B - Breathing
-      final breathingInfo = [
-        if (assessment.respiratoryRate != null) 'AF: ${assessment.respiratoryRate}',
+      final breathingParts = <String>[
+        if (assessment.respiratoryRate != null) 'AF: ${assessment.respiratoryRate}/min',
         if (assessment.spo2 != null) 'SpO₂: ${assessment.spo2}%',
-        if (assessment.breathingIssue?.isNotEmpty ?? false) assessment.breathingIssue,
-      ].join(', ');
-      currentY = _drawField(page, 'Atmung', breathingInfo.isNotEmpty ? breathingInfo : null, normalFont, margin, currentY, pageWidth);
+        if (assessment.breathingSounds?.isNotEmpty ?? false) 'Ausku.: ${assessment.breathingSounds}',
+        if (!assessment.symmetricBreathing) 'Thoraxexkursion asymmetrisch',
+      ];
+      currentY = _drawField(page, 'Atmung', breathingParts.isNotEmpty ? breathingParts.join(' | ') : null, normalFont, margin, currentY, pageWidth);
+      currentY = _drawField(page, 'Problem B', assessment.breathingIssue, normalFont, margin, currentY, pageWidth);
+      currentY = _drawField(page, 'Maßn. B', assessment.breathingIntervention, normalFont, margin, currentY, pageWidth);
       currentY = _drawMedications(page, assessment.breathingMedications, normalFont, smallFont, margin, currentY, pageWidth);
 
       // C - Circulation
-      final circInfo = [
-        if (assessment.heartRate != null) 'HF: ${assessment.heartRate}',
-        if (assessment.systolicBP != null) 'RR: ${assessment.systolicBP}/${assessment.diastolicBP ?? '-'}',
-        if (assessment.circulationIssue?.isNotEmpty ?? false) assessment.circulationIssue,
-      ].join(', ');
-      currentY = _drawField(page, 'Zirkulation', circInfo.isNotEmpty ? circInfo : null, normalFont, margin, currentY, pageWidth);
+      final circParts = <String>[
+        if (assessment.heartRate != null) 'HF: ${assessment.heartRate}/min',
+        if (assessment.systolicBP != null) 'RR: ${assessment.systolicBP}/${assessment.diastolicBP ?? '-'} mmHg',
+        if (assessment.pulseQuality?.isNotEmpty ?? false) 'Puls: ${assessment.pulseQuality}',
+        if (assessment.skinColor?.isNotEmpty ?? false) 'Haut: ${assessment.skinColor}',
+        if (assessment.capillaryRefill?.isNotEmpty ?? false) 'KFZ: ${assessment.capillaryRefill}',
+      ];
+      currentY = _drawField(page, 'Zirkulation', circParts.isNotEmpty ? circParts.join(' | ') : null, normalFont, margin, currentY, pageWidth);
+      currentY = _drawField(page, 'Problem C', assessment.circulationIssue, normalFont, margin, currentY, pageWidth);
+      currentY = _drawField(page, 'Maßn. C', assessment.circulationIntervention, normalFont, margin, currentY, pageWidth);
       currentY = _drawMedications(page, assessment.circulationMedications, normalFont, smallFont, margin, currentY, pageWidth);
 
       // D - Disability
       final gcsTotal = (assessment.gcsEye ?? 0) + (assessment.gcsVerbal ?? 0) + (assessment.gcsMotor ?? 0);
-      final disInfo = [
-        if (gcsTotal > 0) 'GCS: $gcsTotal',
-        if (assessment.bloodSugar != null) 'BZ: ${assessment.bloodSugar}',
-        if (assessment.disabilityIssue?.isNotEmpty ?? false) assessment.disabilityIssue,
-      ].join(', ');
-      currentY = _drawField(page, 'Neurologie', disInfo.isNotEmpty ? disInfo : null, normalFont, margin, currentY, pageWidth);
+      final disParts = <String>[
+        if (gcsTotal > 0) 'GCS: $gcsTotal (E${assessment.gcsEye}/V${assessment.gcsVerbal}/M${assessment.gcsMotor})',
+        if (assessment.pupilLeft?.isNotEmpty ?? false) 'Pupille li: ${assessment.pupilLeft}',
+        if (assessment.pupilRight?.isNotEmpty ?? false) 'Pupille re: ${assessment.pupilRight}',
+        if (assessment.bloodSugar != null) 'BZ: ${assessment.bloodSugar} mg/dl',
+        if (assessment.befastResult?.isNotEmpty ?? false) 'BE-FAST: ${assessment.befastResult}',
+      ];
+      currentY = _drawField(page, 'Neurologie', disParts.isNotEmpty ? disParts.join(' | ') : null, normalFont, margin, currentY, pageWidth);
+      currentY = _drawField(page, 'Problem D', assessment.disabilityIssue, normalFont, margin, currentY, pageWidth);
+      currentY = _drawField(page, 'Maßn. D', assessment.disabilityIntervention, normalFont, margin, currentY, pageWidth);
       currentY = _drawMedications(page, assessment.disabilityMedications, normalFont, smallFont, margin, currentY, pageWidth);
 
       // E - Exposure
-      currentY = _drawField(page, 'Exposition', assessment.exposureIssue, normalFont, margin, currentY, pageWidth);
-      currentY = _drawField(page, 'Verletzungen', assessment.injuries, normalFont, margin, currentY, pageWidth);
+      final expParts = <String>[
+        if (assessment.temperature != null) 'Temp: ${assessment.temperature!.toStringAsFixed(1)} °C',
+        if (assessment.injuries?.isNotEmpty ?? false) 'Verletz.: ${assessment.injuries}',
+        if (assessment.environmentalFactors?.isNotEmpty ?? false) 'Umgebung: ${assessment.environmentalFactors}',
+      ];
+      currentY = _drawField(page, 'Exposition', expParts.isNotEmpty ? expParts.join(' | ') : null, normalFont, margin, currentY, pageWidth);
+      currentY = _drawField(page, 'Problem E', assessment.exposureIssue, normalFont, margin, currentY, pageWidth);
+      currentY = _drawField(page, 'Maßn. E', assessment.exposureIntervention, normalFont, margin, currentY, pageWidth);
       currentY = _drawMedications(page, assessment.exposureMedications, normalFont, smallFont, margin, currentY, pageWidth);
+
+      // Situation vor Ort / Einsatzablauf
+      if (assessment.situationNotes?.isNotEmpty ?? false) {
+        currentY += 4;
+        page.graphics.drawString('Situation vor Ort / Einsatzablauf:', subHeadingFont,
+          bounds: Rect.fromLTWH(margin, currentY, pageWidth - 2 * margin, 14));
+        currentY += 16;
+        // Mehrzeiligen Text zeichnen
+        final double availW = pageWidth - 2 * margin - 10;
+        final textSize = normalFont.measureString(assessment.situationNotes!, layoutArea: Size(availW, 0));
+        final double textH = (textSize.height > 0 ? textSize.height : 14) + 4;
+        page.graphics.drawString(assessment.situationNotes!, normalFont,
+          bounds: Rect.fromLTWH(margin + 10, currentY, availW, textH + 20));
+        currentY += textH + 8;
+      }
 
       // CPR
       if (assessment.cprShocks != null || assessment.cprROSC != null) {

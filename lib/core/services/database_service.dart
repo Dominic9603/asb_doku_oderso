@@ -37,7 +37,7 @@ class DatabaseService {
 
       _database = await sqflite.openDatabase(
         path,
-        version: 6,
+        version: 7,
         onCreate: _onCreate,
         onUpgrade: _onUpgrade,
       );
@@ -316,6 +316,17 @@ class DatabaseService {
         print('✅ Migration v6: befast_result Spalte erfolgreich hinzugefügt');
       } catch (e) {
         print('⚠️ Migration v6: befast_result - $e');
+      }
+    }
+
+    // Migration v6 -> v7: situation_notes Spalte hinzufügen
+    if (oldVersion < 7) {
+      print('🔄 Starte Migration v7: Situation Notes...');
+      try {
+        await db.execute('ALTER TABLE abcde_assessments ADD COLUMN situation_notes TEXT');
+        print('✅ Migration v7: situation_notes Spalte erfolgreich hinzugefügt');
+      } catch (e) {
+        print('⚠️ Migration v7: situation_notes - $e');
       }
     }
   }

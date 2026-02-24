@@ -56,6 +56,7 @@ class ABCDEAssessment {
   final String? exposureIssue;
   final String? exposureIntervention;
   final String? exposureMedications; // "Med1:Dose1|Med2:Dose2"
+  final String? situationNotes; // Situation vor Ort / Einsatzablauf / Ergänzungen
   
   // CPR - Cardiopulmonary Resuscitation
   final String? cprTubusTypes; // "Guedeltubus, Wendltubus" (komma-getrennt)
@@ -111,6 +112,7 @@ class ABCDEAssessment {
     this.exposureIssue,
     this.exposureIntervention,
     this.exposureMedications,
+    this.situationNotes,
     this.cprTubusTypes,
     this.cprTubusSizes,
     this.cprShocks,
@@ -179,6 +181,7 @@ class ABCDEAssessment {
       exposureIssue: map['exposure_issue'] as String?,
       exposureIntervention: map['exposure_intervention'] as String?,
       exposureMedications: map['exposure_medications'] as String?,
+      situationNotes: map['situation_notes'] as String?,
       cprTubusTypes: map['cpr_tubus_types'] as String?,
       cprTubusSizes: map['cpr_tubus_sizes'] as String?,
       cprShocks: map['cpr_shocks'] as int?,
@@ -235,6 +238,7 @@ class ABCDEAssessment {
       'exposure_issue': exposureIssue,
       'exposure_intervention': exposureIntervention,
       'exposure_medications': exposureMedications,
+      'situation_notes': situationNotes,
       'cpr_tubus_types': cprTubusTypes,
       'cpr_tubus_sizes': cprTubusSizes,
       'cpr_shocks': cprShocks,
@@ -287,6 +291,7 @@ class ABCDEAssessment {
     String? exposureIssue,
     String? exposureIntervention,
     String? exposureMedications,
+    String? situationNotes,
     String? cprTubusTypes,
     String? cprTubusSizes,
     int? cprShocks,
@@ -340,6 +345,7 @@ class ABCDEAssessment {
       exposureIssue: exposureIssue ?? this.exposureIssue,
       exposureIntervention: exposureIntervention ?? this.exposureIntervention,
       exposureMedications: exposureMedications ?? this.exposureMedications,
+      situationNotes: situationNotes ?? this.situationNotes,
       cprTubusTypes: cprTubusTypes ?? this.cprTubusTypes,
       cprTubusSizes: cprTubusSizes ?? this.cprTubusSizes,
       cprShocks: cprShocks ?? this.cprShocks,

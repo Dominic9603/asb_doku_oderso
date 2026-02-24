@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 
+import '../../../core/utils/medication_serializer.dart';
 import '../../documentation/models/vital_signs.dart';
 import '../../documentation/providers/mission_provider.dart';
 import '../../documentation/models/abcde_assessment.dart';
@@ -205,13 +206,7 @@ Nächste Schritte / Plan:
     if (abcde.airwayIntervention != null) {
       b.writeln('Maßnahmen: ${abcde.airwayIntervention}');
     }
-    if (abcde.airwayMedications != null && abcde.airwayMedications!.isNotEmpty) {
-      b.writeln('Medikamente:');
-      final meds = abcde.airwayMedications!.split('|');
-      for (final med in meds) {
-        b.writeln('  • $med');
-      }
-    }
+    _appendMedications(b, abcde.airwayMedications);
     b.writeln();
 
     // B – Breathing
@@ -233,6 +228,7 @@ Nächste Schritte / Plan:
     if (abcde.breathingIntervention != null) {
       b.writeln('Maßnahmen: ${abcde.breathingIntervention}');
     }
+    _appendMedications(b, abcde.breathingMedications);
     b.writeln();
 
     // c – Critical Bleeding
@@ -244,9 +240,6 @@ Nächste Schritte / Plan:
     }
     if (abcde.bleedingControl != null) {
       b.writeln('Blutungskontrolle: ${abcde.bleedingControl}');
-    }
-    if (abcde.circulationIntervention != null) {
-      b.writeln('Maßnahmen (c): ${abcde.circulationIntervention}');
     }
     b.writeln();
 
@@ -270,6 +263,10 @@ Nächste Schritte / Plan:
     if (abcde.circulationIssue != null) {
       b.writeln('Problem C: ${abcde.circulationIssue}');
     }
+    if (abcde.circulationIntervention != null) {
+      b.writeln('Maßnahmen C: ${abcde.circulationIntervention}');
+    }
+    _appendMedications(b, abcde.circulationMedications);
     b.writeln();
 
     // D – Disability
@@ -289,12 +286,16 @@ Nächste Schritte / Plan:
     if (abcde.bloodSugar != null) {
       b.writeln('Blutzucker: ${abcde.bloodSugar!.toStringAsFixed(0)} mg/dl');
     }
+    if (abcde.befastResult != null) {
+      b.writeln('BE-FAST: ${abcde.befastResult}');
+    }
     if (abcde.disabilityIssue != null) {
       b.writeln('Problem D: ${abcde.disabilityIssue}');
     }
     if (abcde.disabilityIntervention != null) {
       b.writeln('Maßnahmen D: ${abcde.disabilityIntervention}');
     }
+    _appendMedications(b, abcde.disabilityMedications);
     b.writeln();
 
     // E – Exposure
@@ -314,8 +315,27 @@ Nächste Schritte / Plan:
     if (abcde.exposureIntervention != null) {
       b.writeln('Maßnahmen E: ${abcde.exposureIntervention}');
     }
+    _appendMedications(b, abcde.exposureMedications);
+    if (abcde.situationNotes != null && abcde.situationNotes!.isNotEmpty) {
+      b.writeln();
+      b.writeln('Situation vor Ort / Einsatzablauf:');
+      b.writeln(abcde.situationNotes);
+    }
 
     return b.toString().trim();
+  }
+
+  /// Fügt Medikamente formatiert an den StringBuffer an
+  static void _appendMedications(StringBuffer b, String? medicationsRaw) {
+    if (medicationsRaw == null || medicationsRaw.isEmpty) return;
+    final meds = MedicationSerializer.deserialize(medicationsRaw);
+    if (meds.isEmpty) return;
+    b.writeln('Medikamente:');
+    for (final med in meds) {
+      final name = med['name'] ?? '';
+      final dose = med['dose'] ?? '';
+      b.writeln('  • $name${dose.isNotEmpty ? ' – $dose' : ''}');
+    }
   }
 
   static String _buildObjectiveSummary(
