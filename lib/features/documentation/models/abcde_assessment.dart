@@ -36,6 +36,7 @@ class ABCDEAssessment {
   final String? circulationIntervention;
   final String? circulationMedications; // "Med1:Dose1|Med2:Dose2"
   final String? eventDescription; // Notfallereignis
+  final String? suspectedDiagnosis; // Verdachtsdiagnose
   
   // D - Disability
   final int? gcsEye;
@@ -96,6 +97,7 @@ class ABCDEAssessment {
     this.circulationIssue,
     this.circulationIntervention,
     this.circulationMedications,
+    this.suspectedDiagnosis,
     this.gcsEye,
     this.gcsVerbal,
     this.gcsMotor,
@@ -165,6 +167,7 @@ class ABCDEAssessment {
       circulationIssue: map['circulation_issue'] as String?,
       circulationIntervention: map['circulation_intervention'] as String?,
       circulationMedications: map['circulation_medications'] as String?,
+      suspectedDiagnosis: map['suspected_diagnosis'] as String?,
       gcsEye: map['gcs_eye'] as int?,
       gcsVerbal: map['gcs_verbal'] as int?,
       gcsMotor: map['gcs_motor'] as int?,
@@ -222,6 +225,7 @@ class ABCDEAssessment {
       'circulation_issue': circulationIssue,
       'circulation_intervention': circulationIntervention,
       'circulation_medications': circulationMedications,
+      'suspected_diagnosis': suspectedDiagnosis,
       'gcs_eye': gcsEye,
       'gcs_verbal': gcsVerbal,
       'gcs_motor': gcsMotor,
@@ -275,6 +279,7 @@ class ABCDEAssessment {
     String? circulationIssue,
     String? circulationIntervention,
     String? circulationMedications,
+    String? suspectedDiagnosis,
     int? gcsEye,
     int? gcsVerbal,
     int? gcsMotor,
@@ -329,6 +334,7 @@ class ABCDEAssessment {
       circulationIssue: circulationIssue ?? this.circulationIssue,
       circulationIntervention: circulationIntervention ?? this.circulationIntervention,
       circulationMedications: circulationMedications ?? this.circulationMedications,
+      suspectedDiagnosis: suspectedDiagnosis ?? this.suspectedDiagnosis,
       gcsEye: gcsEye ?? this.gcsEye,
       gcsVerbal: gcsVerbal ?? this.gcsVerbal,
       gcsMotor: gcsMotor ?? this.gcsMotor,

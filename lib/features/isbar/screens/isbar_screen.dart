@@ -107,7 +107,7 @@ Erstbefund nach cABCDE:
 ${_buildAbcdeSummary(abcde)}
 
 Verdachtsdiagnose:
-(noch als Freitext zu erfassen)
+${abcde?.suspectedDiagnosis ?? '-'}
 ''',
             ),
 

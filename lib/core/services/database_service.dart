@@ -37,7 +37,7 @@ class DatabaseService {
 
       _database = await sqflite.openDatabase(
         path,
-        version: 7,
+        version: 8,
         onCreate: _onCreate,
         onUpgrade: _onUpgrade,
       );
@@ -131,6 +131,7 @@ class DatabaseService {
         exposure_intervention TEXT,
         exposure_medications TEXT,
         situation_notes TEXT,
+        suspected_diagnosis TEXT,
         ecg_rhythm TEXT,
         a_documented INTEGER DEFAULT 0,
         event_description TEXT,
@@ -328,6 +329,17 @@ class DatabaseService {
         print('✅ Migration v7: situation_notes Spalte erfolgreich hinzugefügt');
       } catch (e) {
         print('⚠️ Migration v7: situation_notes - $e');
+      }
+    }
+
+    // Migration v7 -> v8: suspected_diagnosis Spalte hinzufügen
+    if (oldVersion < 8) {
+      print('🔄 Starte Migration v8: Verdachtsdiagnose...');
+      try {
+        await db.execute('ALTER TABLE abcde_assessments ADD COLUMN suspected_diagnosis TEXT');
+        print('✅ Migration v8: suspected_diagnosis Spalte erfolgreich hinzugefügt');
+      } catch (e) {
+        print('⚠️ Migration v8: suspected_diagnosis - $e');
       }
     }
   }
