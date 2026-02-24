@@ -170,7 +170,7 @@ class _DTabState extends State<DTab> {
       pupilRight: pupilRight,
       bloodSugar: _bloodSugarController.text.isEmpty
           ? null
-          : double.parse(_bloodSugarController.text),
+          : double.tryParse(_bloodSugarController.text),
       befastResult: _befastResult,
       disabilityIssue: _disabilityIssueController.text.isEmpty
           ? null

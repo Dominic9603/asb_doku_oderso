@@ -162,6 +162,11 @@ class PDFExportService {
 
       final assessment = abcdeAssessments.last;
 
+      // Notfallereignis
+      if (assessment.eventDescription?.isNotEmpty ?? false) {
+        currentY = _drawField(page, 'Notfallereignis', assessment.eventDescription, normalFont, margin, currentY, pageWidth);
+      }
+
       // c - Critical Bleeding
       if (assessment.externalBleeding) {
         final bleedingInfo = [assessment.bleedingLocation, assessment.bleedingControl]

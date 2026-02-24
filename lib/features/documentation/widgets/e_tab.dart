@@ -69,7 +69,7 @@ class _ETabState extends State<ETab> {
     final updated = current.copyWith(
       temperature: _temperatureController.text.isEmpty
           ? null
-          : double.parse(_temperatureController.text),
+          : double.tryParse(_temperatureController.text),
       injuries: _injuriesController.text.isEmpty
           ? null
           : _injuriesController.text,

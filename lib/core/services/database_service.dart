@@ -130,6 +130,7 @@ class DatabaseService {
         exposure_issue TEXT,
         exposure_intervention TEXT,
         exposure_medications TEXT,
+        situation_notes TEXT,
         ecg_rhythm TEXT,
         a_documented INTEGER DEFAULT 0,
         event_description TEXT,
