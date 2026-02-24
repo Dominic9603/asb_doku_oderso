@@ -4,6 +4,8 @@ import 'package:intl/intl.dart';
 import '../../../shared/theme/theme_provider.dart';
 
 import '../../../shared/theme/app_theme.dart';
+import '../../../shared/widgets/update_dialog.dart';
+import '../../../core/services/update_service.dart';
 import '../providers/mission_provider.dart';
 import '../models/mission.dart';
 import 'documentation_screen.dart'; 
@@ -20,11 +22,25 @@ class _MissionListScreenState extends State<MissionListScreen> {
   void initState() {
     super.initState();
     // Daten beim Öffnen des Screens laden
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<MissionProvider>().refresh().then((_) {
-        if (mounted) setState(() {});
-      });
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      await context.read<MissionProvider>().refresh();
+      if (mounted) setState(() {});
+      // Update-Check im Hintergrund (nur Android)
+      _checkForUpdate();
     });
+  }
+
+  Future<void> _checkForUpdate() async {
+    if (!mounted) return;
+    try {
+      final service = UpdateService();
+      final info = await service.checkForUpdate();
+      if (info != null && mounted) {
+        await UpdateDialog.show(context, info, service);
+      }
+    } catch (_) {
+      // Fehler beim Update-Check still ignorieren
+    }
   }
 
   @override

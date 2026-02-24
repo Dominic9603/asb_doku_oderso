@@ -1,7 +1,7 @@
 name: rescue_doc
 description: Professionelle Dokumentations-App für Notfallsanitäter
 publish_to: 'none'
-version: 1.0.0+1
+version: 1.0.1+2
 
 environment:
   sdk: '>=3.0.0 <4.0.0'
@@ -42,6 +42,10 @@ dependencies:
 
   # HTTP für Online-Key-Validierung
   http: ^1.2.0
+
+  # Update-Check + APK-Installation
+  open_file: ^3.3.2
+  package_info_plus: ^8.1.4
 
   # Cloud Storage für PDF-Link-Sharing
   supabase_flutter: ^2.3.0
