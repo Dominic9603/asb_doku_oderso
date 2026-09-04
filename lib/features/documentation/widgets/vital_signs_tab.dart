@@ -20,12 +20,14 @@ class _VitalSignsTabState extends State<VitalSignsTab> {
   final _rrDiaController = TextEditingController();
   final _spo2Controller = TextEditingController();
   final _bzController = TextEditingController();
+  final _tempController = TextEditingController();
 
   bool _hfNotMeasured = false;
   bool _afNotMeasured = false;
   bool _rrNotMeasured = false;
   bool _spo2NotMeasured = false;
   bool _bzNotMeasured = false;
+  bool _tempNotMeasured = false;
 
   @override
   void initState() {
@@ -41,13 +43,13 @@ class _VitalSignsTabState extends State<VitalSignsTab> {
     _rrDiaController.dispose();
     _spo2Controller.dispose();
     _bzController.dispose();
+    _tempController.dispose();
     super.dispose();
   }
 
   double? _parseSpo2() {
     if (_spo2NotMeasured || _spo2Controller.text.isEmpty) return null;
-    final value =
-        double.tryParse(_spo2Controller.text.replaceAll(',', '.'));
+    final value = double.tryParse(_spo2Controller.text.replaceAll(',', '.'));
     if (value == null) return null;
     if (value < 0) return 0;
     if (value > 100) return 100;
@@ -76,6 +78,9 @@ class _VitalSignsTabState extends State<VitalSignsTab> {
       bloodSugar: _bzNotMeasured || _bzController.text.isEmpty
           ? null
           : double.parse(_bzController.text),
+      temperature: _tempNotMeasured || _tempController.text.isEmpty
+          ? null
+          : double.parse(_tempController.text.replaceAll(',', '.')),
     );
 
     await provider.addVitalSigns(vital);
@@ -89,12 +94,14 @@ class _VitalSignsTabState extends State<VitalSignsTab> {
       _rrDiaController.clear();
       _spo2Controller.clear();
       _bzController.clear();
+      _tempController.clear();
 
       _hfNotMeasured = false;
       _afNotMeasured = false;
       _rrNotMeasured = false;
       _spo2NotMeasured = false;
       _bzNotMeasured = false;
+      _tempNotMeasured = false;
     });
 
     if (mounted) {
@@ -125,7 +132,6 @@ class _VitalSignsTabState extends State<VitalSignsTab> {
                   style: TextStyle(fontSize: 13, color: Colors.grey),
                 ),
                 const SizedBox(height: 16),
-
                 _buildVitalRow(
                   label: 'Herzfrequenz',
                   controller: _hfController,
@@ -139,7 +145,6 @@ class _VitalSignsTabState extends State<VitalSignsTab> {
                   },
                 ),
                 const SizedBox(height: 12),
-
                 _buildVitalRow(
                   label: 'Atemfrequenz',
                   controller: _afController,
@@ -153,10 +158,8 @@ class _VitalSignsTabState extends State<VitalSignsTab> {
                   },
                 ),
                 const SizedBox(height: 12),
-
                 _buildBpRow(),
                 const SizedBox(height: 12),
-
                 _buildVitalRow(
                   label: 'SpO₂',
                   controller: _spo2Controller,
@@ -171,7 +174,6 @@ class _VitalSignsTabState extends State<VitalSignsTab> {
                   isSpo2: true,
                 ),
                 const SizedBox(height: 12),
-
                 _buildVitalRow(
                   label: 'Blutzucker',
                   controller: _bzController,
@@ -184,9 +186,20 @@ class _VitalSignsTabState extends State<VitalSignsTab> {
                     });
                   },
                 ),
-
+                const SizedBox(height: 12),
+                _buildVitalRow(
+                  label: 'Körpertemperatur',
+                  controller: _tempController,
+                  unit: '°C',
+                  notMeasured: _tempNotMeasured,
+                  onToggleNotMeasured: (v) {
+                    setState(() {
+                      _tempNotMeasured = v;
+                      if (v) _tempController.clear();
+                    });
+                  },
+                ),
                 const SizedBox(height: 16),
-
                 ElevatedButton.icon(
                   onPressed: _save,
                   icon: const Icon(Icons.save),
@@ -218,8 +231,7 @@ class _VitalSignsTabState extends State<VitalSignsTab> {
               suffixText: unit,
             ),
             enabled: !notMeasured,
-            keyboardType:
-                const TextInputType.numberWithOptions(decimal: true),
+            keyboardType: const TextInputType.numberWithOptions(decimal: true),
             inputFormatters: [
               FilteringTextInputFormatter.allow(RegExp(r'[0-9.]')),
             ],
@@ -230,8 +242,7 @@ class _VitalSignsTabState extends State<VitalSignsTab> {
                     );
                     if (v != null && v > 100) {
                       controller.text = '100';
-                      controller.selection =
-                          TextSelection.fromPosition(
+                      controller.selection = TextSelection.fromPosition(
                         TextPosition(offset: controller.text.length),
                       );
                     }

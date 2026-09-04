@@ -2,12 +2,12 @@ class ABCDEAssessment {
   final String id;
   final String missionId;
   final DateTime timestamp;
-  
+
   // c - Critical Bleeding
   final bool externalBleeding;
   final String? bleedingLocation;
   final String? bleedingControl;
-  
+
   // A - Airway
   final bool airwayPatent;
   final bool airwayThreatened;
@@ -15,7 +15,7 @@ class ABCDEAssessment {
   final String? airwayIntervention;
   final String? airwayMedications; // "Med1, Med2" (komma-getrennt)
   final bool aDocumented;
-  
+
   // B - Breathing
   final int? respiratoryRate;
   final double? spo2;
@@ -24,7 +24,7 @@ class ABCDEAssessment {
   final String? breathingIssue;
   final String? breathingIntervention;
   final String? breathingMedications; // "Med1:Dose1|Med2:Dose2"
-  
+
   // C - Circulation
   final int? heartRate;
   final int? systolicBP;
@@ -37,7 +37,7 @@ class ABCDEAssessment {
   final String? circulationMedications; // "Med1:Dose1|Med2:Dose2"
   final String? eventDescription; // Notfallereignis
   final String? suspectedDiagnosis; // Verdachtsdiagnose
-  
+
   // D - Disability
   final int? gcsEye;
   final int? gcsVerbal;
@@ -49,7 +49,7 @@ class ABCDEAssessment {
   final String? disabilityIssue;
   final String? disabilityIntervention;
   final String? disabilityMedications; // "Med1:Dose1|Med2:Dose2"
-  
+
   // E - Exposure/Environment
   final double? temperature;
   final String? injuries;
@@ -57,18 +57,28 @@ class ABCDEAssessment {
   final String? exposureIssue;
   final String? exposureIntervention;
   final String? exposureMedications; // "Med1:Dose1|Med2:Dose2"
-  final String? situationNotes; // Situation vor Ort / Einsatzablauf / Ergänzungen
-  
+  final String?
+      situationNotes; // Situation vor Ort / Einsatzablauf / Ergänzungen
+
   // CPR - Cardiopulmonary Resuscitation
   final String? cprTubusTypes; // "Guedeltubus, Wendltubus" (komma-getrennt)
   final String? cprTubusSizes; // "Größe 3, 32mm" (komma-getrennt)
   final int? cprShocks;
   final bool? cprROSC; // Rückkehr von Eigenkreislauf
   final String? cprMedications; // "Med1, Med2" (komma-getrennt)
-  
+
   // EKG
   final String? ecgRhythm;
-  
+
+  // SAMPLER Schema (Anamnese, dokumentiert bei E)
+  final String? samplerSymptoms;
+  final String? samplerAllergies;
+  final String? samplerMedications;
+  final String? samplerPastMedicalHistory;
+  final String? samplerLastOralIntake;
+  final String? samplerEvents;
+  final String? samplerRiskFactors;
+
   ABCDEAssessment({
     required this.id,
     required this.missionId,
@@ -123,13 +133,20 @@ class ABCDEAssessment {
     this.ecgRhythm,
     this.aDocumented = false,
     this.eventDescription,
+    this.samplerSymptoms,
+    this.samplerAllergies,
+    this.samplerMedications,
+    this.samplerPastMedicalHistory,
+    this.samplerLastOralIntake,
+    this.samplerEvents,
+    this.samplerRiskFactors,
   });
-  
+
   int? get gcsTotal {
     if (gcsEye == null || gcsVerbal == null || gcsMotor == null) return null;
     return gcsEye! + gcsVerbal! + gcsMotor!;
   }
-  
+
   factory ABCDEAssessment.create(String missionId) {
     return ABCDEAssessment(
       id: DateTime.now().millisecondsSinceEpoch.toString(),
@@ -137,7 +154,7 @@ class ABCDEAssessment {
       timestamp: DateTime.now(),
     );
   }
-  
+
   factory ABCDEAssessment.fromMap(Map<String, dynamic> map) {
     return ABCDEAssessment(
       id: map['id'] as String,
@@ -192,10 +209,17 @@ class ABCDEAssessment {
       cprMedications: map['cpr_medications'] as String?,
       ecgRhythm: map['ecg_rhythm'] as String?,
       aDocumented: (map['a_documented'] ?? 0) == 1,
-      eventDescription: map['event_description'] as String?
+      eventDescription: map['event_description'] as String?,
+      samplerSymptoms: map['sampler_symptoms'] as String?,
+      samplerAllergies: map['sampler_allergies'] as String?,
+      samplerMedications: map['sampler_medications'] as String?,
+      samplerPastMedicalHistory: map['sampler_past_medical_history'] as String?,
+      samplerLastOralIntake: map['sampler_last_oral_intake'] as String?,
+      samplerEvents: map['sampler_events'] as String?,
+      samplerRiskFactors: map['sampler_risk_factors'] as String?,
     );
   }
-  
+
   Map<String, dynamic> toMap() {
     return {
       'id': id,
@@ -251,9 +275,16 @@ class ABCDEAssessment {
       'ecg_rhythm': ecgRhythm,
       'a_documented': aDocumented ? 1 : 0,
       'event_description': eventDescription,
+      'sampler_symptoms': samplerSymptoms,
+      'sampler_allergies': samplerAllergies,
+      'sampler_medications': samplerMedications,
+      'sampler_past_medical_history': samplerPastMedicalHistory,
+      'sampler_last_oral_intake': samplerLastOralIntake,
+      'sampler_events': samplerEvents,
+      'sampler_risk_factors': samplerRiskFactors,
     };
   }
-  
+
   ABCDEAssessment copyWith({
     bool? externalBleeding,
     String? bleedingLocation,
@@ -305,6 +336,13 @@ class ABCDEAssessment {
     String? ecgRhythm,
     String? eventDescription,
     bool? aDocumented,
+    String? samplerSymptoms,
+    String? samplerAllergies,
+    String? samplerMedications,
+    String? samplerPastMedicalHistory,
+    String? samplerLastOralIntake,
+    String? samplerEvents,
+    String? samplerRiskFactors,
   }) {
     return ABCDEAssessment(
       id: id,
@@ -323,7 +361,8 @@ class ABCDEAssessment {
       breathingSounds: breathingSounds ?? this.breathingSounds,
       symmetricBreathing: symmetricBreathing ?? this.symmetricBreathing,
       breathingIssue: breathingIssue ?? this.breathingIssue,
-      breathingIntervention: breathingIntervention ?? this.breathingIntervention,
+      breathingIntervention:
+          breathingIntervention ?? this.breathingIntervention,
       breathingMedications: breathingMedications ?? this.breathingMedications,
       heartRate: heartRate ?? this.heartRate,
       systolicBP: systolicBP ?? this.systolicBP,
@@ -332,8 +371,10 @@ class ABCDEAssessment {
       skinColor: skinColor ?? this.skinColor,
       capillaryRefill: capillaryRefill ?? this.capillaryRefill,
       circulationIssue: circulationIssue ?? this.circulationIssue,
-      circulationIntervention: circulationIntervention ?? this.circulationIntervention,
-      circulationMedications: circulationMedications ?? this.circulationMedications,
+      circulationIntervention:
+          circulationIntervention ?? this.circulationIntervention,
+      circulationMedications:
+          circulationMedications ?? this.circulationMedications,
       suspectedDiagnosis: suspectedDiagnosis ?? this.suspectedDiagnosis,
       gcsEye: gcsEye ?? this.gcsEye,
       gcsVerbal: gcsVerbal ?? this.gcsVerbal,
@@ -343,8 +384,10 @@ class ABCDEAssessment {
       bloodSugar: bloodSugar ?? this.bloodSugar,
       befastResult: befastResult ?? this.befastResult,
       disabilityIssue: disabilityIssue ?? this.disabilityIssue,
-      disabilityIntervention: disabilityIntervention ?? this.disabilityIntervention,
-      disabilityMedications: disabilityMedications ?? this.disabilityMedications,
+      disabilityIntervention:
+          disabilityIntervention ?? this.disabilityIntervention,
+      disabilityMedications:
+          disabilityMedications ?? this.disabilityMedications,
       temperature: temperature ?? this.temperature,
       injuries: injuries ?? this.injuries,
       environmentalFactors: environmentalFactors ?? this.environmentalFactors,
@@ -360,6 +403,27 @@ class ABCDEAssessment {
       ecgRhythm: ecgRhythm ?? this.ecgRhythm,
       aDocumented: aDocumented ?? this.aDocumented,
       eventDescription: eventDescription ?? this.eventDescription,
+      samplerSymptoms: samplerSymptoms ?? this.samplerSymptoms,
+      samplerAllergies: samplerAllergies ?? this.samplerAllergies,
+      samplerMedications: samplerMedications ?? this.samplerMedications,
+      samplerPastMedicalHistory:
+          samplerPastMedicalHistory ?? this.samplerPastMedicalHistory,
+      samplerLastOralIntake:
+          samplerLastOralIntake ?? this.samplerLastOralIntake,
+      samplerEvents: samplerEvents ?? this.samplerEvents,
+      samplerRiskFactors: samplerRiskFactors ?? this.samplerRiskFactors,
     );
+  }
+
+  /// Bei isokoren Pupillen als "Augen: ..." zusammengefasst, bei anisokoren getrennt li/re.
+  String? get pupilSummary {
+    if (pupilLeft == null && pupilRight == null) return null;
+    final isIsokor = (pupilLeft?.startsWith('isokor') ?? false) ||
+        (pupilLeft?.startsWith('isochor') ?? false) ||
+        (pupilLeft != null && pupilLeft == pupilRight);
+    if (isIsokor) {
+      return 'Augen: ${pupilLeft ?? pupilRight}';
+    }
+    return 'Pupille li: ${pupilLeft ?? '-'}, re: ${pupilRight ?? '-'}';
   }
 }

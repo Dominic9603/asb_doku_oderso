@@ -2,18 +2,19 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 
+import '../../../shared/theme/app_theme.dart';
 import '../../../core/utils/medication_serializer.dart';
+import '../../../core/utils/scaffold_messenger_key.dart';
 import '../../documentation/models/vital_signs.dart';
+import '../../documentation/models/mission.dart';
 import '../../documentation/providers/mission_provider.dart';
 import '../../documentation/models/abcde_assessment.dart';
+import '../providers/isbar_provider.dart';
 
 class ISBARScreen extends StatefulWidget {
   final String missionId;
 
-  const ISBARScreen({
-    super.key,
-    required this.missionId,
-  });
+  const ISBARScreen({super.key, required this.missionId});
 
   @override
   State<ISBARScreen> createState() => _ISBARScreenState();
@@ -21,11 +22,20 @@ class ISBARScreen extends StatefulWidget {
 
 class _ISBARScreenState extends State<ISBARScreen> {
   bool _loading = true;
+  final _assessmentController = TextEditingController();
+  final _recommendationController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
     _loadMissionIfNeeded();
+  }
+
+  @override
+  void dispose() {
+    _assessmentController.dispose();
+    _recommendationController.dispose();
+    super.dispose();
   }
 
   Future<void> _loadMissionIfNeeded() async {
@@ -34,7 +44,31 @@ class _ISBARScreenState extends State<ISBARScreen> {
         provider.currentMission!.id != widget.missionId) {
       await provider.loadMission(widget.missionId);
     }
+    await context.read<ISBARProvider>().loadForMission(widget.missionId);
+    final handover = context.read<ISBARProvider>().current;
+    _assessmentController.text = handover?.assessment ?? '';
+    _recommendationController.text = handover?.recommendation ?? '';
     if (mounted) setState(() => _loading = false);
+  }
+
+  Future<void> _saveAssessmentAndRecommendation() async {
+    await context.read<ISBARProvider>().saveForMission(
+          missionId: widget.missionId,
+          assessment: _assessmentController.text.trim().isEmpty
+              ? null
+              : _assessmentController.text.trim(),
+          recommendation: _recommendationController.text.trim().isEmpty
+              ? null
+              : _recommendationController.text.trim(),
+        );
+    if (mounted) {
+      scaffoldMessengerKey.currentState?.showSnackBar(
+        const SnackBar(
+          content: Text('ISBAR gespeichert'),
+          backgroundColor: AppColors.success,
+        ),
+      );
+    }
   }
 
   int? _calculateAge(DateTime? dob) {
@@ -50,9 +84,7 @@ class _ISBARScreenState extends State<ISBARScreen> {
   @override
   Widget build(BuildContext context) {
     if (_loading) {
-      return const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
-      );
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
     final provider = context.read<MissionProvider>();
@@ -66,21 +98,18 @@ class _ISBARScreenState extends State<ISBARScreen> {
     final vital = provider.latestVitalSigns;
 
     if (mission == null || patient == null) {
-      return const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
-      );
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
+    final isCompleted = mission.status == MissionStatus.completed;
+
     final dob = patient.dateOfBirth;
-    final dobText =
-        dob != null ? DateFormat('dd/MM/yyyy').format(dob) : '-';
+    final dobText = dob != null ? DateFormat('dd/MM/yyyy').format(dob) : '-';
     final age = _calculateAge(dob);
     final ageText = age != null ? '$age Jahre' : '-';
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('ISBAR'),
-      ),
+      appBar: AppBar(title: const Text('ISBAR')),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: ListView(
@@ -101,7 +130,7 @@ Einsatznummer: ${mission.missionNumber ?? mission.id}
               title: 'S – Situation (Notfallereignis & Erstbefund)',
               content: '''
 Notfallereignis:
-${abcde?.eventDescription ?? patient.eventsLeadingToIllness ?? '-'}
+${abcde?.eventDescription ?? '-'}
 
 Erstbefund nach cABCDE:
 ${_buildAbcdeSummary(abcde)}
@@ -124,30 +153,94 @@ ${abcde?.suspectedDiagnosis ?? '-'}
               content: _buildObjectiveSummary(abcde, vital),
             ),
 
-            // B: Background – SAMPLER aus Patient
+            // B: Background – SAMPLER (dokumentiert bei E)
             _buildSection(
               title: 'B – Background (SAMPLER)',
               content: '''
-S – Symptome: ${patient.symptoms ?? '-'}
-A – Allergien: ${patient.allergies ?? '-'}
-M – Medikation: ${patient.medications ?? '-'}
-P – Vorerkrankungen: ${patient.pastMedicalHistory ?? '-'}
-L – Letzte orale Aufnahme: ${patient.lastOralIntake ?? '-'}
-E – Ereignis: ${patient.eventsLeadingToIllness ?? '-'}
-R – Risikofaktoren: ${patient.riskFactors ?? '-'}
+S – Symptome: ${abcde?.samplerSymptoms ?? '-'}
+A – Allergien: ${abcde?.samplerAllergies ?? '-'}
+M – Medikation: ${abcde?.samplerMedications ?? '-'}
+P – Vorerkrankungen: ${abcde?.samplerPastMedicalHistory ?? '-'}
+L – Letzte orale Aufnahme: ${abcde?.samplerLastOralIntake ?? '-'}
+E – Ereignis: ${abcde?.samplerEvents ?? '-'}
+R – Risikofaktoren: ${abcde?.samplerRiskFactors ?? '-'}
 ''',
             ),
 
-            // A: Nächste Schritte – aktuell Freitext / später Feld in Mission
-            _buildSection(
-              title: 'A – Assessment / Nächste Schritte',
-              content: '''
-Einschätzung / klinische Beurteilung:
-(noch als Freitext zu erfassen)
+            // A: Assessment – eigene Einschätzung (editierbar)
+            AbsorbPointer(
+              absorbing: isCompleted,
+              child: Card(
+                margin: const EdgeInsets.only(bottom: 16),
+                child: Padding(
+                  padding: const EdgeInsets.all(12),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'A – Assessment (Einschätzung)',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 18,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      TextField(
+                        controller: _assessmentController,
+                        maxLines: 4,
+                        decoration: const InputDecoration(
+                          hintText:
+                              'Klinische Beurteilung: Befunde aus cABCDE, Vitalparameter, Risiko …',
+                        ),
+                        onEditingComplete: _saveAssessmentAndRecommendation,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
 
-Nächste Schritte / Plan:
-(noch als Freitext zu erfassen)
-''',
+            // R: Recommendation – Empfehlung für die Übergabe (editierbar)
+            AbsorbPointer(
+              absorbing: isCompleted,
+              child: Card(
+                margin: const EdgeInsets.only(bottom: 16),
+                child: Padding(
+                  padding: const EdgeInsets.all(12),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'R – Recommendation (Empfehlung)',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 18,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      TextField(
+                        controller: _recommendationController,
+                        maxLines: 4,
+                        decoration: const InputDecoration(
+                          hintText:
+                              'Was wünschst du dir? Aufnahme, Diagnostik, Therapie, Konsil …',
+                        ),
+                        onEditingComplete: _saveAssessmentAndRecommendation,
+                      ),
+                      const SizedBox(height: 12),
+                      if (!isCompleted)
+                        Align(
+                          alignment: Alignment.centerRight,
+                          child: ElevatedButton.icon(
+                            onPressed: _saveAssessmentAndRecommendation,
+                            icon: const Icon(Icons.save),
+                            label: const Text('A/R speichern'),
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+              ),
             ),
           ],
         ),
@@ -175,10 +268,7 @@ Nächste Schritte / Plan:
                   fontSize: 18,
                 ),
               ),
-              TextSpan(
-                text: content,
-                style: const TextStyle(fontSize: 15),
-              ),
+              TextSpan(text: content, style: const TextStyle(fontSize: 15)),
             ],
           ),
         ),
@@ -220,8 +310,10 @@ Nächste Schritte / Plan:
     if (abcde.breathingSounds != null) {
       b.writeln('Auskultation: ${abcde.breathingSounds}');
     }
-    b.writeln('Symmetrische Thoraxexkursion: '
-        '${abcde.symmetricBreathing ? 'ja' : 'nein'}');
+    b.writeln(
+      'Symmetrische Thoraxexkursion: '
+      '${abcde.symmetricBreathing ? 'ja' : 'nein'}',
+    );
     if (abcde.breathingIssue != null) {
       b.writeln('Problem: ${abcde.breathingIssue}');
     }
@@ -233,8 +325,10 @@ Nächste Schritte / Plan:
 
     // c – Critical Bleeding
     b.writeln('c – Critical Bleeding:');
-    b.writeln('Starke äußere Blutung: '
-        '${abcde.externalBleeding ? 'ja' : 'nein'}');
+    b.writeln(
+      'Starke äußere Blutung: '
+      '${abcde.externalBleeding ? 'ja' : 'nein'}',
+    );
     if (abcde.bleedingLocation != null) {
       b.writeln('Blutungsort: ${abcde.bleedingLocation}');
     }
@@ -276,12 +370,11 @@ Nächste Schritte / Plan:
         abcde.gcsMotor != null) {
       final gcsTotal = abcde.gcsEye! + abcde.gcsVerbal! + abcde.gcsMotor!;
       b.writeln(
-          'GCS: $gcsTotal (E${abcde.gcsEye}/V${abcde.gcsVerbal}/M${abcde.gcsMotor})');
+        'GCS: $gcsTotal (E${abcde.gcsEye}/V${abcde.gcsVerbal}/M${abcde.gcsMotor})',
+      );
     }
-    if (abcde.pupilLeft != null || abcde.pupilRight != null) {
-      b.writeln('Pupillen: '
-          'links: ${abcde.pupilLeft ?? '-'}, '
-          'rechts: ${abcde.pupilRight ?? '-'}');
+    if (abcde.pupilSummary != null) {
+      b.writeln(abcde.pupilSummary);
     }
     if (abcde.bloodSugar != null) {
       b.writeln('Blutzucker: ${abcde.bloodSugar!.toStringAsFixed(0)} mg/dl');

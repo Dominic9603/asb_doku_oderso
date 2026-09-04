@@ -2,16 +2,16 @@ class Medication {
   final String id;
 
   // ALT-kompatible Felder
-  final String name;           // = Handelsname
-  final String? adultDose;     // optionale Standard-Erwachsenendosis
-  final String? childDose;     // optionale Standard-Kinderdosis
+  final String name; // = Handelsname
+  final String? adultDose; // optionale Standard-Erwachsenendosis
+  final String? childDose; // optionale Standard-Kinderdosis
 
   // NEUE Felder
   final String activeIngredient;
   final String? indications;
   final String? contraindications;
   final String? applicationRoute;
-  final String? dosage;        // detaillierter Dosierungstext
+  final String? dosage; // detaillierter Dosierungstext
   final String? category;
   final String? notes;
   final String? sectionsCsv; // z.B. "B", "C", "B,C"
@@ -50,13 +50,13 @@ class Medication {
   }
 
   bool appliesToSection(String section) {
-  if (sectionsCsv == null || sectionsCsv!.isEmpty) return true;
-  final parts = sectionsCsv!
-      .split(',')
-      .map((e) => e.trim().toUpperCase())
-      .where((e) => e.isNotEmpty);
-  return parts.contains(section.toUpperCase());
-}
+    if (sectionsCsv == null || sectionsCsv!.isEmpty) return true;
+    final parts = sectionsCsv!
+        .split(',')
+        .map((e) => e.trim().toUpperCase())
+        .where((e) => e.isNotEmpty);
+    return parts.contains(section.toUpperCase());
+  }
 
   Medication copyWith({
     String? id,
@@ -87,6 +87,10 @@ class Medication {
       sectionsCsv: sectionsCsv ?? this.sectionsCsv,
     );
   }
+
+  /// True, wenn der Nutzer Dosierung selbst gepflegt hat (im Gegensatz zu den
+  /// unbearbeiteten Grunddatenbank-Einträgen ohne Dosierung/Kontraindikation).
+  bool get isUserConfigured => dosage != null && dosage!.trim().isNotEmpty;
 
   Map<String, dynamic> toMap() {
     return {
@@ -121,6 +125,4 @@ class Medication {
       sectionsCsv: map['sections_csv'] as String?,
     );
   }
-  
 }
-

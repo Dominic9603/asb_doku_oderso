@@ -25,17 +25,17 @@ class _DTabState extends State<DTab> {
   final _disabilityInterventionController = TextEditingController();
 
   // Pupillen
-  String? _pupilState; // 'isochor' oder 'anisochor'
+  String? _pupilState; // 'isokor' oder 'anisokor'
   String? _lightReaction; // 'normal' oder 'erloschen'
   String? _pupilSize; // 'weit', 'mittel', 'eng'
 
   // BEFAST
   String? _befastResult; // 'auffällig' oder 'unauffällig'
 
-  // Bei anisochor: optional getrennte Beschreibung
+  // Bei anisokor: optional getrennte Beschreibung
   final _pupilLeftDetailController = TextEditingController();
   final _pupilRightDetailController = TextEditingController();
-  
+
   // Medikamente für Disability (neues System)
   final List<Map<String, dynamic>> _disabilityMedications = [];
 
@@ -52,18 +52,22 @@ class _DTabState extends State<DTab> {
         _bloodSugarController.text = abcde.bloodSugar!.toStringAsFixed(0);
       }
       _disabilityIssueController.text = abcde.disabilityIssue ?? '';
-      _disabilityInterventionController.text = abcde.disabilityIntervention ?? '';
+      _disabilityInterventionController.text =
+          abcde.disabilityIntervention ?? '';
 
       // BEFAST
       _befastResult = abcde.befastResult;
 
-      // Pupillen aus Text rekonstruieren (so gut wie möglich)
+      // Pupillen aus Text rekonstruieren (so gut wie möglich, inkl. alter Schreibweise)
       final left = abcde.pupilLeft ?? '';
       final right = abcde.pupilRight ?? '';
       final both = '$left | $right';
 
-      if (both.contains('isochor')) _pupilState = 'isochor';
-      if (both.contains('anisochor')) _pupilState = 'anisochor';
+      if (both.contains('anisochor') || both.contains('anisokor')) {
+        _pupilState = 'anisokor';
+      } else if (both.contains('isochor') || both.contains('isokor')) {
+        _pupilState = 'isokor';
+      }
       if (both.contains('normal')) _lightReaction = 'normal';
       if (both.contains('erloschen')) _lightReaction = 'erloschen';
       if (both.contains('weit')) _pupilSize = 'weit';
@@ -129,9 +133,9 @@ class _DTabState extends State<DTab> {
     );
   }
 
-  String _buildPupilTextIsochor() {
+  String _buildPupilTextIsokor() {
     final parts = <String>[];
-    parts.add('isochor');
+    parts.add('isokor');
     if (_lightReaction != null) parts.add('Lichtreaktion: $_lightReaction');
     if (_pupilSize != null) parts.add('Größe: $_pupilSize');
     return parts.join(', ');
@@ -148,17 +152,17 @@ class _DTabState extends State<DTab> {
     String? pupilLeft;
     String? pupilRight;
 
-    if (_pupilState == 'isochor') {
-      final text = _buildPupilTextIsochor();
+    if (_pupilState == 'isokor') {
+      final text = _buildPupilTextIsokor();
       pupilLeft = text;
       pupilRight = text;
-    } else if (_pupilState == 'anisochor') {
+    } else if (_pupilState == 'anisokor') {
       // Bei Anisokorie erlauben wir freie Beschreibung in den Detailfeldern
       pupilLeft = _pupilLeftDetailController.text.isEmpty
-          ? 'anisochor (links)'
+          ? 'anisokor (links)'
           : _pupilLeftDetailController.text;
       pupilRight = _pupilRightDetailController.text.isEmpty
-          ? 'anisochor (rechts)'
+          ? 'anisokor (rechts)'
           : _pupilRightDetailController.text;
     }
 
@@ -259,9 +263,9 @@ class _DTabState extends State<DTab> {
 
                 const SizedBox(height: 16),
 
-                // Pupillen
+                // Augen / Pupillen
                 const Text(
-                  'Pupillen',
+                  'Augen',
                   style: TextStyle(fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 4),
@@ -269,28 +273,28 @@ class _DTabState extends State<DTab> {
                   spacing: 8,
                   children: [
                     ChoiceChip(
-                      label: const Text('isochor'),
-                      selected: _pupilState == 'isochor',
+                      label: const Text('isokor'),
+                      selected: _pupilState == 'isokor',
                       selectedColor: AppColors.primary,
                       labelStyle: TextStyle(
-                        color: _pupilState == 'isochor' ? Colors.white : null,
+                        color: _pupilState == 'isokor' ? Colors.white : null,
                       ),
                       onSelected: (_) {
                         setState(() {
-                          _pupilState = 'isochor';
+                          _pupilState = 'isokor';
                         });
                       },
                     ),
                     ChoiceChip(
-                      label: const Text('anisochor'),
-                      selected: _pupilState == 'anisochor',
+                      label: const Text('anisokor'),
+                      selected: _pupilState == 'anisokor',
                       selectedColor: AppColors.primary,
                       labelStyle: TextStyle(
-                        color: _pupilState == 'anisochor' ? Colors.white : null,
+                        color: _pupilState == 'anisokor' ? Colors.white : null,
                       ),
                       onSelected: (_) {
                         setState(() {
-                          _pupilState = 'anisochor';
+                          _pupilState = 'anisokor';
                         });
                       },
                     ),
@@ -299,7 +303,7 @@ class _DTabState extends State<DTab> {
 
                 const SizedBox(height: 8),
 
-                if (_pupilState == 'isochor') ...[
+                if (_pupilState == 'isokor') ...[
                   const Text(
                     'Lichtreaktion',
                     style: TextStyle(fontWeight: FontWeight.bold),
@@ -313,7 +317,8 @@ class _DTabState extends State<DTab> {
                         selected: _lightReaction == 'normal',
                         selectedColor: AppColors.primary,
                         labelStyle: TextStyle(
-                          color: _lightReaction == 'normal' ? Colors.white : null,
+                          color:
+                              _lightReaction == 'normal' ? Colors.white : null,
                         ),
                         onSelected: (_) {
                           setState(() => _lightReaction = 'normal');
@@ -324,7 +329,9 @@ class _DTabState extends State<DTab> {
                         selected: _lightReaction == 'erloschen',
                         selectedColor: AppColors.primary,
                         labelStyle: TextStyle(
-                          color: _lightReaction == 'erloschen' ? Colors.white : null,
+                          color: _lightReaction == 'erloschen'
+                              ? Colors.white
+                              : null,
                         ),
                         onSelected: (_) {
                           setState(() => _lightReaction = 'erloschen');
@@ -378,7 +385,7 @@ class _DTabState extends State<DTab> {
                   ),
                 ],
 
-                if (_pupilState == 'anisochor') ...[
+                if (_pupilState == 'anisokor') ...[
                   const SizedBox(height: 8),
                   const Text(
                     'Details bei Anisokorie',
@@ -428,11 +435,15 @@ class _DTabState extends State<DTab> {
                       selected: _befastResult == 'unauffällig',
                       selectedColor: AppColors.success,
                       labelStyle: TextStyle(
-                        color: _befastResult == 'unauffällig' ? Colors.white : null,
+                        color: _befastResult == 'unauffällig'
+                            ? Colors.white
+                            : null,
                       ),
                       onSelected: (_) {
                         setState(() {
-                          _befastResult = _befastResult == 'unauffällig' ? null : 'unauffällig';
+                          _befastResult = _befastResult == 'unauffällig'
+                              ? null
+                              : 'unauffällig';
                         });
                       },
                     ),
@@ -441,11 +452,13 @@ class _DTabState extends State<DTab> {
                       selected: _befastResult == 'auffällig',
                       selectedColor: AppColors.critical,
                       labelStyle: TextStyle(
-                        color: _befastResult == 'auffällig' ? Colors.white : null,
+                        color:
+                            _befastResult == 'auffällig' ? Colors.white : null,
                       ),
                       onSelected: (_) {
                         setState(() {
-                          _befastResult = _befastResult == 'auffällig' ? null : 'auffällig';
+                          _befastResult =
+                              _befastResult == 'auffällig' ? null : 'auffällig';
                         });
                       },
                     ),
@@ -461,8 +474,11 @@ class _DTabState extends State<DTab> {
                     suffixText: 'mg/dl',
                     prefixIcon: Icon(Icons.water_drop),
                   ),
-                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                  inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'[0-9.]'))],
+                  keyboardType:
+                      const TextInputType.numberWithOptions(decimal: true),
+                  inputFormatters: [
+                    FilteringTextInputFormatter.allow(RegExp(r'[0-9.]'))
+                  ],
                 ),
 
                 const SizedBox(height: 12),

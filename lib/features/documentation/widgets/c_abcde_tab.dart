@@ -21,23 +21,22 @@ class CABCDENavTab extends StatefulWidget {
 class _CABCDENavTabState extends State<CABCDENavTab>
     with SingleTickerProviderStateMixin {
   late TabController _subTabController;
-  
+
   @override
   void initState() {
     super.initState();
     _subTabController = TabController(length: 7, vsync: this);
   }
-  
+
   @override
   void dispose() {
     _subTabController.dispose();
     super.dispose();
   }
-  
-    bool _isCDone(ABCDEAssessment? a) {
+
+  bool _isCDone(ABCDEAssessment? a) {
     if (a == null) return false;
-    final hasBleeding =
-        a.externalBleeding ||
+    final hasBleeding = a.externalBleeding ||
         (a.bleedingLocation != null && a.bleedingLocation!.isNotEmpty) ||
         (a.bleedingControl != null && a.bleedingControl!.isNotEmpty);
 
@@ -56,23 +55,20 @@ class _CABCDENavTabState extends State<CABCDENavTab>
 
   bool _isBDone(ABCDEAssessment? a) {
     if (a == null) return false;
-    final hasValues =
-        a.respiratoryRate != null ||
+    final hasValues = a.respiratoryRate != null ||
         a.spo2 != null ||
         (a.breathingSounds != null && a.breathingSounds!.isNotEmpty) ||
         (a.breathingIssue != null && a.breathingIssue!.isNotEmpty);
 
     final bi = a.breathingIntervention ?? '';
-    final hasIntervention =
-        bi.contains('O2') || bi.contains('Medikament B:');
+    final hasIntervention = bi.contains('O2') || bi.contains('Medikament B:');
 
     return hasValues || hasIntervention;
   }
 
   bool _isC2Done(ABCDEAssessment? a) {
     if (a == null) return false;
-    final hasValues =
-        a.heartRate != null ||
+    final hasValues = a.heartRate != null ||
         a.systolicBP != null ||
         a.diastolicBP != null ||
         (a.pulseQuality != null && a.pulseQuality!.isNotEmpty) ||
@@ -83,7 +79,7 @@ class _CABCDENavTabState extends State<CABCDENavTab>
     final ci = a.circulationIntervention ?? '';
     final hasIntervention =
         (ci.contains('Zugang:') && !ci.contains('Zugang (c)')) ||
-        ci.contains('Medikament C:');
+            ci.contains('Medikament C:');
 
     return hasValues || hasIntervention;
   }
@@ -97,14 +93,16 @@ class _CABCDENavTabState extends State<CABCDENavTab>
         (a.pupilRight != null && a.pupilRight!.isNotEmpty) ||
         a.bloodSugar != null ||
         (a.disabilityIssue != null && a.disabilityIssue!.isNotEmpty) ||
-        (a.disabilityIntervention != null && a.disabilityIntervention!.isNotEmpty);
+        (a.disabilityIntervention != null &&
+            a.disabilityIntervention!.isNotEmpty);
   }
 
   bool _isEDone(ABCDEAssessment? a) {
     if (a == null) return false;
     return a.temperature != null ||
         (a.injuries != null && a.injuries!.isNotEmpty) ||
-        (a.environmentalFactors != null && a.environmentalFactors!.isNotEmpty) ||
+        (a.environmentalFactors != null &&
+            a.environmentalFactors!.isNotEmpty) ||
         (a.exposureIssue != null && a.exposureIssue!.isNotEmpty) ||
         (a.exposureIntervention != null && a.exposureIntervention!.isNotEmpty);
   }
@@ -117,11 +115,12 @@ class _CABCDENavTabState extends State<CABCDENavTab>
         (a.cprMedications != null && a.cprMedications!.isNotEmpty);
   }
 
-  
   @override
   Widget build(BuildContext context) {
-    final abcde = context.read<MissionProvider>().latestABCDE;
-    
+    // watch() statt read(), damit die Tab-Beschriftungen sofort nach dem
+    // Speichern (notifyListeners) grün werden, ohne den Tab wechseln zu müssen.
+    final abcde = context.watch<MissionProvider>().latestABCDE;
+
     Text _tabLabel(String text, bool done) {
       return Text(
         text,
@@ -131,7 +130,7 @@ class _CABCDENavTabState extends State<CABCDENavTab>
         ),
       );
     }
-    
+
     return Column(
       children: [
         Material(

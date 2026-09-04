@@ -47,19 +47,17 @@ class MissionProvider extends ChangeNotifier {
     _isLoading = true;
     try {
       _missions = await _repository.getAllMissions();
-      
+
       // Auto-Löschung: Einsätze älter als 24h entfernen
       final now = DateTime.now();
-      final expiredMissions = _missions.where((m) =>
-        now.difference(m.startTime).inHours >= 24
-      ).toList();
+      final expiredMissions = _missions
+          .where((m) => now.difference(m.startTime).inHours >= 24)
+          .toList();
       for (final expired in expiredMissions) {
         await _repository.deleteMission(expired.id);
       }
       if (expiredMissions.isNotEmpty) {
-        _missions.removeWhere((m) =>
-          now.difference(m.startTime).inHours >= 24
-        );
+        _missions.removeWhere((m) => now.difference(m.startTime).inHours >= 24);
       }
     } finally {
       _isLoading = false;
@@ -87,20 +85,16 @@ class MissionProvider extends ChangeNotifier {
     try {
       _currentMission = await _repository.getMissionById(missionId);
       if (_currentMission != null) {
-        _currentPatient =
-            await _repository.getPatientByMissionId(missionId);
-        _currentVitalSigns =
-            await _repository.getVitalSignsByMissionId(missionId);
-        _currentMeasures =
-            await _repository.getMeasuresByMissionId(missionId);
-        _abcdeAssessments =
-            await _repository.getABCDEByMissionId(missionId);
+        _currentPatient = await _repository.getPatientByMissionId(missionId);
+        _currentVitalSigns = await _repository.getVitalSignsByMissionId(
+          missionId,
+        );
+        _currentMeasures = await _repository.getMeasuresByMissionId(missionId);
+        _abcdeAssessments = await _repository.getABCDEByMissionId(missionId);
 
         // Sortiere ABCDE assessments nach Timestamp (neuste zuerst)
         if (_abcdeAssessments.isNotEmpty) {
-          _abcdeAssessments.sort(
-            (a, b) => b.timestamp.compareTo(a.timestamp),
-          );
+          _abcdeAssessments.sort((a, b) => b.timestamp.compareTo(a.timestamp));
         }
 
         // falls kein Patient vorhanden, einen anlegen
@@ -111,9 +105,7 @@ class MissionProvider extends ChangeNotifier {
 
         // NEU: latestVitalSigns aus Liste bestimmen
         if (_currentVitalSigns.isNotEmpty) {
-          _currentVitalSigns.sort(
-            (a, b) => b.timestamp.compareTo(a.timestamp),
-          );
+          _currentVitalSigns.sort((a, b) => b.timestamp.compareTo(a.timestamp));
           latestVitalSigns = _currentVitalSigns.first;
         } else {
           latestVitalSigns = null;
@@ -122,6 +114,28 @@ class MissionProvider extends ChangeNotifier {
     } finally {
       _isLoading = false;
     }
+  }
+
+  /// Ändert die Einsatznummer (auch nach dem Erstellen des Einsatzes editierbar).
+  /// Direkter Konstruktor-Aufruf statt copyWith, damit die Nummer auch auf
+  /// null/leer gesetzt werden kann.
+  Future<void> updateMissionNumber(String? missionNumber) async {
+    final current = _currentMission;
+    if (current == null) return;
+    final updated = Mission(
+      id: current.id,
+      missionNumber: missionNumber,
+      startTime: current.startTime,
+      endTime: current.endTime,
+      status: current.status,
+      createdBy: current.createdBy,
+      createdAt: current.createdAt,
+      updatedAt: DateTime.now(),
+    );
+    await _repository.saveMission(updated);
+    _currentMission = updated;
+    notifyListeners();
+    await _loadMissions();
   }
 
   Future<void> completeMission() async {
@@ -164,9 +178,7 @@ class MissionProvider extends ChangeNotifier {
     _currentVitalSigns.removeWhere((v) => v.id == id);
     if (latestVitalSigns?.id == id) {
       if (_currentVitalSigns.isNotEmpty) {
-        _currentVitalSigns.sort(
-          (a, b) => b.timestamp.compareTo(a.timestamp),
-        );
+        _currentVitalSigns.sort((a, b) => b.timestamp.compareTo(a.timestamp));
         latestVitalSigns = _currentVitalSigns.first;
       } else {
         latestVitalSigns = null;
@@ -213,7 +225,7 @@ class MissionProvider extends ChangeNotifier {
     await _repository.saveABCDEAssessment(assessment);
     _abcdeAssessments.removeWhere((a) => a.id == assessment.id);
     _abcdeAssessments.insert(0, assessment);
-    notifyListeners();  // ← KRITISCH: UI muss benachrichtigt werden
+    notifyListeners(); // ← KRITISCH: UI muss benachrichtigt werden
   }
 
   Future<void> refresh() async {

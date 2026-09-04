@@ -248,7 +248,9 @@ class _CTabState extends State<CTab> {
 
   Widget _buildAccessCard(BuildContext context) {
     return Card(
-      color: Colors.grey.shade50,
+      color: Theme.of(context).brightness == Brightness.dark
+          ? Colors.grey.shade800
+          : Colors.grey.shade50,
       elevation: 0,
       child: Padding(
         padding: const EdgeInsets.all(12),
