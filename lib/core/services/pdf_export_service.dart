@@ -653,15 +653,13 @@ class PDFExportService {
       currentY += 16;
       // Mehrzeiligen Text zeichnen
       final double availW = pageWidth - 2 * margin - 10;
-      final textSize = normalFont.measureString(
+      final double textH = _drawWrappedText(
+        page,
         latestAssessment!.situationNotes!,
-        layoutArea: Size(availW, 0),
-      );
-      final double textH = (textSize.height > 0 ? textSize.height : 14) + 4;
-      page.graphics.drawString(
-        latestAssessment.situationNotes!,
         normalFont,
-        bounds: Rect.fromLTWH(margin + 10, currentY, availW, textH + 20),
+        margin + 10,
+        currentY,
+        availW,
       );
       currentY += textH + 8;
     }
@@ -716,17 +714,15 @@ class PDFExportService {
         final String label = measure.displayName;
         final String notesPart =
             (measure.notes?.isNotEmpty ?? false) ? ' - ${measure.notes}' : '';
-        page.graphics.drawString(
+        final double lineHeight = _drawWrappedText(
+          page,
           '\u2022 $timeStr: $label$notesPart',
           normalFont,
-          bounds: Rect.fromLTWH(
-            margin + 10,
-            currentY,
-            pageWidth - 2 * margin - 10,
-            12,
-          ),
+          margin + 10,
+          currentY,
+          pageWidth - 2 * margin - 10,
         );
-        currentY += 14;
+        currentY += lineHeight + 2;
       }
     }
 
@@ -811,19 +807,42 @@ class PDFExportService {
     double pageWidth,
   ) {
     if (value?.isNotEmpty ?? false) {
-      page.graphics.drawString(
-        '$label: $value',
-        font,
-        bounds: Rect.fromLTWH(
-          margin + 10,
-          currentY,
-          pageWidth - 2 * margin - 10,
-          12,
-        ),
-      );
-      return currentY + 14;
+      return currentY +
+          _drawWrappedText(
+            page,
+            '$label: $value',
+            font,
+            margin + 10,
+            currentY,
+            pageWidth - 2 * margin - 10,
+          );
     }
     return currentY;
+  }
+
+  static double _drawWrappedText(
+    PdfPage page,
+    String text,
+    PdfFont font,
+    double x,
+    double y,
+    double width,
+  ) {
+    final format = PdfStringFormat(wordWrap: PdfWordWrapType.word);
+    final textSize = font.measureString(
+      text,
+      layoutArea: Size(width, 10000),
+      format: format,
+    );
+    final double height = textSize.height > 0 ? textSize.height + 2 : 14;
+
+    page.graphics.drawString(
+      text,
+      font,
+      bounds: Rect.fromLTWH(x, y, width, height),
+      format: format,
+    );
+    return height;
   }
 
   /// Zeichnet Medikamenten-Auflistung mit Kontraindikationen im PDF
@@ -854,23 +873,14 @@ class PDFExportService {
         line += kiChecked ? ' \u2713' : ' \u2717';
       }
 
-      // Mehrzeilig zeichnen falls Text zu lang
       final double availableWidth = pageWidth - 2 * margin - 20;
-      final textSize = smallFont.measureString(
-        line,
-        layoutArea: Size(availableWidth, 0),
-      );
-      final double lineHeight = textSize.height > 0 ? textSize.height + 4 : 12;
-
-      page.graphics.drawString(
+      final double lineHeight = _drawWrappedText(
+        page,
         line,
         smallFont,
-        bounds: Rect.fromLTWH(
-          margin + 20,
-          currentY,
-          availableWidth,
-          lineHeight + 4,
-        ),
+        margin + 20,
+        currentY,
+        availableWidth,
       );
       currentY += lineHeight + 2;
     }
