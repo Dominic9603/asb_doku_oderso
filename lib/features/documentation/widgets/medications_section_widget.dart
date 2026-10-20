@@ -5,6 +5,7 @@ import '../../../core/services/database_service.dart';
 
 class MedicationsSectionWidget extends StatefulWidget {
   final String title; // z.B. "Medikamente bei A"
+  final String sectionCode;
   final Color? bgColor; // Optional, defaults to blue.shade50
   final List<Map<String, dynamic>> medications;
   final VoidCallback onMedicationsChanged; // Callback nach Änderungen
@@ -13,6 +14,7 @@ class MedicationsSectionWidget extends StatefulWidget {
   const MedicationsSectionWidget({
     super.key,
     required this.title,
+    required this.sectionCode,
     this.bgColor,
     required this.medications,
     required this.onMedicationsChanged,
@@ -26,16 +28,22 @@ class MedicationsSectionWidget extends StatefulWidget {
 
 class _MedicationsSectionWidgetState extends State<MedicationsSectionWidget> {
 
-  Future<void> _addMedication() async {
-    // Dialog-Kontext SOFORT cachen bevor async Operationen stattfinden
-    final dialogContext = context;
+  String get _sectionLabel =>
+      widget.sectionCode == 'CRITICAL' ? 'c' : widget.sectionCode;
 
-    // Nur Medikamente anzeigen, die im "Medikamente"-Tab bereits mit
-    // Dosierung/Kontraindikationen befüllt wurden. Unbearbeitete
-    // Grunddatenbank-Einträge werden hier ausgeblendet.
+  Future<void> _addMedication({bool includeAllDatabase = false}) async {
     final allMedications = await DatabaseService.instance.getAllMedications();
-    final medications =
-        allMedications.where((m) => m.isUserConfigured).toList();
+    final sectionMedications = allMedications
+        .where(
+          (medication) =>
+              medication.isUserConfigured &&
+              medication.sectionsCsv?.trim().isNotEmpty == true &&
+              medication.appliesToSection(widget.sectionCode),
+        )
+        .toList();
+    final medications = includeAllDatabase
+        ? allMedications
+        : sectionMedications;
 
     if (!mounted) return;
 
@@ -47,7 +55,7 @@ class _MedicationsSectionWidgetState extends State<MedicationsSectionWidget> {
 
     try {
       result = await showDialog<Map<String, dynamic>>(
-        context: dialogContext,
+        context: context,
         barrierDismissible: false,
         useRootNavigator: true,
         builder: (dialogContext) {
@@ -76,24 +84,17 @@ class _MedicationsSectionWidgetState extends State<MedicationsSectionWidget> {
                       (!hasContraindications || kiChecked);
 
               return AlertDialog(
-                title: const Text('Medikament hinzufügen'),
+                title: Text(
+                  includeAllDatabase
+                      ? 'Einmalig zu $_sectionLabel hinzufügen'
+                      : 'Medikament bei $_sectionLabel hinzufügen',
+                ),
                 content: SingleChildScrollView(
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       if (!adHocMode) ...[
-                        if (medications.isEmpty)
-                          const Padding(
-                            padding: EdgeInsets.only(bottom: 12),
-                            child: Text(
-                              'Keine eigenen Medikamente vorhanden. Bitte zuerst '
-                              'im Tab "Medikamente" Dosierung/Kontraindikationen '
-                              'anlegen – oder unten ein einmaliges Medikament nur '
-                              'für diesen Einsatz erfassen.',
-                              style: TextStyle(fontSize: 13),
-                            ),
-                          ),
                         DropdownButton<String>(
                           value: selectedMedId,
                           isExpanded: true,
@@ -389,8 +390,8 @@ class _MedicationsSectionWidgetState extends State<MedicationsSectionWidget> {
                 ),
                 IconButton(
                   icon: const Icon(Icons.add_circle, color: AppColors.primary),
-                  onPressed: _addMedication,
-                  tooltip: 'Medikament hinzufügen',
+                  onPressed: () => _addMedication(),
+                  tooltip: 'Abschnittsmedikament hinzufügen',
                 ),
               ],
             ),
@@ -471,6 +472,14 @@ class _MedicationsSectionWidgetState extends State<MedicationsSectionWidget> {
                   );
                 },
               ),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: TextButton.icon(
+                onPressed: () => _addMedication(includeAllDatabase: true),
+                icon: const Icon(Icons.playlist_add),
+                label: Text('Einmalig zu $_sectionLabel hinzufügen'),
+              ),
+            ),
           ],
         ),
       ),

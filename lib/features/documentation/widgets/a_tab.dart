@@ -260,6 +260,7 @@ class _ATabState extends State<ATab> {
                 // Medikamente Sektion mit Widget
                 MedicationsSectionWidget(
                   title: 'Medikamente bei A',
+                  sectionCode: 'A',
                   bgColor: Colors.blue.shade50,
                   medications: _airwayMedications,
                   onMedicationsChanged: () {

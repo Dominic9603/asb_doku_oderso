@@ -565,6 +565,7 @@ class _C2TabState extends State<C2Tab> {
                 // Medikamente für Circulation
                 MedicationsSectionWidget(
                   title: 'Medikamente bei C',
+                  sectionCode: 'C',
                   bgColor: Colors.red.shade50,
                   medications: _circulationMedications,
                   onMedicationsChanged: () {

@@ -224,6 +224,7 @@ class _CTabState extends State<CTab> {
                 // Medikamente für Critical Bleeding
                 MedicationsSectionWidget(
                   title: 'Medikamente bei c',
+                  sectionCode: 'CRITICAL',
                   bgColor: Colors.orange.shade50,
                   medications: _circulationMedications,
                   onMedicationsChanged: () {

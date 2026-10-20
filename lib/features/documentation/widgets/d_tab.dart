@@ -508,6 +508,7 @@ class _DTabState extends State<DTab> {
                 // Medikamente für Disability
                 MedicationsSectionWidget(
                   title: 'Medikamente bei D',
+                  sectionCode: 'D',
                   bgColor: Colors.purple.shade50,
                   medications: _disabilityMedications,
                   onMedicationsChanged: () {

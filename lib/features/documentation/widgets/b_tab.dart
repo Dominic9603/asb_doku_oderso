@@ -253,6 +253,7 @@ class _BTabState extends State<BTab> {
                 // Medikamente für Breathing
                 MedicationsSectionWidget(
                   title: 'Medikamente bei B',
+                  sectionCode: 'B',
                   bgColor: Colors.green.shade50,
                   medications: _breathingMedications,
                   onMedicationsChanged: () {

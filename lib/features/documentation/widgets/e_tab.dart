@@ -265,6 +265,7 @@ class _ETabState extends State<ETab> {
                 // Medikamente für Exposure
                 MedicationsSectionWidget(
                   title: 'Medikamente bei E',
+                  sectionCode: 'E',
                   bgColor: Colors.red.shade50,
                   medications: _exposureMedications,
                   onMedicationsChanged: () {
