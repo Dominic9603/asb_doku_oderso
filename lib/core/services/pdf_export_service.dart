@@ -53,7 +53,7 @@ class PDFExportService {
     // Titel
     final String missionNr =
         mission.missionNumber ?? mission.id.substring(0, 8);
-    page.graphics.drawString(
+    _drawString(page, 
       'Einsatzbericht - $missionNr',
       headingFont,
       bounds: Rect.fromLTWH(margin, currentY, pageWidth - 2 * margin, 20),
@@ -67,7 +67,7 @@ class PDFExportService {
         ? DateFormat('HH:mm').format(mission.endTime!)
         : 'Noch aktiv';
 
-    page.graphics.drawString(
+    _drawString(page, 
       'Einsatzzeit: $startTimeStr - $endTimeStr Uhr',
       normalFont,
       bounds: Rect.fromLTWH(margin, currentY, pageWidth - 2 * margin, 15),
@@ -82,7 +82,7 @@ class PDFExportService {
           );
 
     // Patientendaten
-    page.graphics.drawString(
+    _drawString(page, 
       'Patientendaten',
       subHeadingFont,
       bounds: Rect.fromLTWH(margin, currentY, pageWidth - 2 * margin, 14),
@@ -93,7 +93,7 @@ class PDFExportService {
       final nameStr =
           '${patient.firstName ?? ''} ${patient.lastName ?? ''}'.trim();
       if (nameStr.isNotEmpty) {
-        page.graphics.drawString(
+        _drawString(page, 
           'Name: $nameStr',
           normalFont,
           bounds: Rect.fromLTWH(
@@ -108,7 +108,7 @@ class PDFExportService {
 
       if (patient.dateOfBirth != null) {
         final ageStr = patient.age != null ? ' (${patient.age} Jahre)' : '';
-        page.graphics.drawString(
+        _drawString(page, 
           'Geburtsdatum: ${DateFormat('dd.MM.yyyy').format(patient.dateOfBirth!)}$ageStr',
           normalFont,
           bounds: Rect.fromLTWH(
@@ -128,7 +128,7 @@ class PDFExportService {
           Gender.diverse: 'Divers',
           Gender.unknown: 'Unbekannt',
         };
-        page.graphics.drawString(
+        _drawString(page, 
           'Geschlecht: ${genderLabels[patient.gender]}',
           normalFont,
           bounds: Rect.fromLTWH(
@@ -165,7 +165,7 @@ class PDFExportService {
 
     // ABCDE Assessments
     if (abcdeAssessments.isNotEmpty) {
-      page.graphics.drawString(
+      _drawString(page, 
         'ABCDE Assessments',
         subHeadingFont,
         bounds: Rect.fromLTWH(margin, currentY, pageWidth - 2 * margin, 14),
@@ -248,7 +248,7 @@ class PDFExportService {
       final breathingParts = <String>[
         if (assessment.respiratoryRate != null)
           'AF: ${assessment.respiratoryRate}/min',
-        if (assessment.spo2 != null) 'SpO₂: ${assessment.spo2}%',
+        if (assessment.spo2 != null) 'SpO2: ${assessment.spo2}%',
         if (assessment.breathingSounds?.isNotEmpty ?? false)
           'Ausku.: ${assessment.breathingSounds}',
         if (!assessment.symmetricBreathing) 'Thoraxexkursion asymmetrisch',
@@ -488,7 +488,7 @@ class PDFExportService {
         assessment.samplerRiskFactors,
       ].any((v) => v?.isNotEmpty ?? false)) {
         currentY += 5;
-        page.graphics.drawString(
+        _drawString(page, 
           'SAMPLER Schema (Anamnese)',
           subHeadingFont,
           bounds: Rect.fromLTWH(margin, currentY, pageWidth - 2 * margin, 14),
@@ -563,7 +563,7 @@ class PDFExportService {
     // Messwerttabelle (Vitalparameter)
     if (vitalSigns.isNotEmpty) {
       currentY += 5;
-      page.graphics.drawString(
+      _drawString(page, 
         'Vitalparameter',
         subHeadingFont,
         bounds: Rect.fromLTWH(margin, currentY, pageWidth - 2 * margin, 14),
@@ -593,7 +593,7 @@ class PDFExportService {
       );
 
       for (int i = 0; i < headers.length; i++) {
-        page.graphics.drawString(
+        _drawString(page, 
           headers[i],
           smallFont,
           bounds: Rect.fromLTWH(colX + 2, currentY + 3, colWidth - 4, 12),
@@ -629,7 +629,7 @@ class PDFExportService {
         ];
 
         for (int j = 0; j < values.length; j++) {
-          page.graphics.drawString(
+          _drawString(page, 
             values[j],
             smallFont,
             bounds: Rect.fromLTWH(colX + 2, currentY + 1, colWidth - 4, 12),
@@ -645,7 +645,7 @@ class PDFExportService {
     // Freitextfeld aus E - Situation vor Ort / Einsatzablauf
     if (latestAssessment?.situationNotes?.isNotEmpty ?? false) {
       currentY += 4;
-      page.graphics.drawString(
+      _drawString(page, 
         'Situation vor Ort / Einsatzablauf:',
         subHeadingFont,
         bounds: Rect.fromLTWH(margin, currentY, pageWidth - 2 * margin, 14),
@@ -669,7 +669,7 @@ class PDFExportService {
         ((isbar.assessment?.isNotEmpty ?? false) ||
             (isbar.recommendation?.isNotEmpty ?? false))) {
       currentY += 5;
-      page.graphics.drawString(
+      _drawString(page, 
         'ISBAR - Einschätzung & Empfehlung',
         subHeadingFont,
         bounds: Rect.fromLTWH(margin, currentY, pageWidth - 2 * margin, 14),
@@ -702,7 +702,7 @@ class PDFExportService {
         ..sort((a, b) => a.performedAt.compareTo(b.performedAt));
 
       currentY += 5;
-      page.graphics.drawString(
+      _drawString(page, 
         'Massnahmen',
         subHeadingFont,
         bounds: Rect.fromLTWH(margin, currentY, pageWidth - 2 * margin, 14),
@@ -742,7 +742,7 @@ class PDFExportService {
     final double leftX = margin;
 
     if (userInfo != null) {
-      page.graphics.drawString(
+      _drawString(page, 
         userInfo.fullName,
         normalFont,
         bounds: Rect.fromLTWH(leftX, bottomY + 58, leftBlockWidth, 14),
@@ -761,7 +761,7 @@ class PDFExportService {
     );
 
     if (userInfo != null && userInfo.shortSign.isNotEmpty) {
-      page.graphics.drawString(
+      _drawString(page, 
         userInfo.shortSign,
         normalFont,
         bounds: Rect.fromLTWH(rightX, bottomY + 65, rightBlockWidth, 14),
@@ -820,6 +820,54 @@ class PDFExportService {
     return currentY;
   }
 
+  /// Zeichen außerhalb von Windows-1252, die sinnvoll ersetzt werden können.
+  static const Map<int, String> _pdfCharReplacements = {
+    0x2080: '0', 0x2081: '1', 0x2082: '2', 0x2083: '3', 0x2084: '4',
+    0x2085: '5', 0x2086: '6', 0x2087: '7', 0x2088: '8', 0x2089: '9',
+    0x2070: '0', 0x2074: '4', 0x2075: '5', 0x2076: '6', 0x2077: '7',
+    0x2078: '8', 0x2079: '9',
+    0x2010: '-', 0x2011: '-', 0x2012: '-', 0x2212: '-',
+    0x2264: '<=', 0x2265: '>=', 0x2260: '!=', 0x2248: '~',
+    0x2190: '<-', 0x2192: '->', 0x2194: '<->', 0x21D2: '=>',
+    0x2191: '^', 0x2193: 'v',
+    0x2713: 'x', 0x2714: 'x', 0x2715: '-', 0x2717: '-', 0x2718: '-',
+    0x2103: '°C', 0x2116: 'Nr.',
+    0x200B: '', 0x200C: '', 0x200D: '', 0xFEFF: '', 0xFE0F: '',
+  };
+
+  /// Zusätzliche (>= 256) Zeichen, die Windows-1252 bzw. PdfStandardFont kennt.
+  static const String _cp1252Extras =
+      '€‚ƒ„…†‡ˆ‰Š‹ŒŽ‘’“”•–—˜™š›œžŸ';
+
+  /// PdfStandardFont (Helvetica) unterstützt nur Windows-1252. Andere Zeichen
+  /// (z.B. „₂“, „✓“, Emojis) führen in Syncfusion zu einem RangeError.
+  static String _pdfSafe(String text) {
+    final buffer = StringBuffer();
+    for (final rune in text.runes) {
+      if (rune < 256 || _cp1252Extras.contains(String.fromCharCode(rune))) {
+        buffer.writeCharCode(rune);
+      } else {
+        buffer.write(_pdfCharReplacements[rune] ?? '?');
+      }
+    }
+    return buffer.toString();
+  }
+
+  static void _drawString(
+    PdfPage page,
+    String text,
+    PdfFont font, {
+    required Rect bounds,
+    PdfStringFormat? format,
+  }) {
+    page.graphics.drawString(
+      _pdfSafe(text),
+      font,
+      bounds: bounds,
+      format: format,
+    );
+  }
+
   static double _drawWrappedText(
     PdfPage page,
     String text,
@@ -828,6 +876,7 @@ class PDFExportService {
     double y,
     double width,
   ) {
+    text = _pdfSafe(text);
     final format = PdfStringFormat(wordWrap: PdfWordWrapType.word);
     final textSize = font.measureString(
       text,
@@ -836,7 +885,7 @@ class PDFExportService {
     );
     final double height = textSize.height > 0 ? textSize.height + 2 : 14;
 
-    page.graphics.drawString(
+    _drawString(page, 
       text,
       font,
       bounds: Rect.fromLTWH(x, y, width, height),
@@ -870,7 +919,7 @@ class PDFExportService {
       String line = '\u2022 $name \u2013 $dose';
       if (ki.isNotEmpty) {
         line += ' | KI: $ki';
-        line += kiChecked ? ' \u2713' : ' \u2717';
+        line += kiChecked ? ' (geprüft)' : ' (nicht geprüft)';
       }
 
       final double availableWidth = pageWidth - 2 * margin - 20;
