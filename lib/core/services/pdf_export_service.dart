@@ -30,11 +30,13 @@ class PDFExportService {
     print('📋 PDF Export - shortSign: "${userInfo?.shortSign}"');
     final PdfDocument document = PdfDocument();
     document.pageSettings.margins.all = 0;
-    final PdfPage page = document.pages.add();
+    PdfPage page = document.pages.add();
 
     const double pageWidth = 595;
     const double pageHeight = 842;
     const double margin = 20;
+    const double signatureBlockHeight = 90;
+    const double contentBottomY = pageHeight - margin - signatureBlockHeight;
     double currentY = margin;
 
     final PdfFont headingFont = PdfStandardFont(
@@ -49,6 +51,79 @@ class PDFExportService {
     );
     final PdfFont normalFont = PdfStandardFont(PdfFontFamily.helvetica, 10);
     final PdfFont smallFont = PdfStandardFont(PdfFontFamily.helvetica, 8);
+
+    void ensureSpace(double height) {
+      if (currentY + height > contentBottomY) {
+        page = document.pages.add();
+        currentY = margin;
+      }
+    }
+
+    // ignore: no_leading_underscores_for_local_identifiers
+    double _drawField(
+      PdfPage ignoredPage,
+      String label,
+      String? value,
+      PdfFont font,
+      double ignoredMargin,
+      double ignoredY,
+      double ignoredPageWidth,
+    ) {
+      if (value?.isNotEmpty ?? false) {
+        final text = '$label: $value';
+        final width = pageWidth - 2 * margin - 10;
+        final height = _measureWrappedTextHeight(text, font, width);
+        ensureSpace(height);
+        currentY += _drawWrappedText(
+          page,
+          text,
+          font,
+          margin + 10,
+          currentY,
+          width,
+        );
+      }
+      return currentY;
+    }
+
+    // ignore: no_leading_underscores_for_local_identifiers
+    double _drawMedications(
+      PdfPage ignoredPage,
+      String? medicationsText,
+      PdfFont ignoredNormalFont,
+      PdfFont ignoredSmallFont,
+      double ignoredMargin,
+      double ignoredY,
+      double ignoredPageWidth,
+    ) {
+      if (medicationsText == null || medicationsText.isEmpty) return currentY;
+
+      final meds = MedicationSerializer.parseForPdf(medicationsText);
+      for (final med in meds) {
+        final name = med['name'] ?? '';
+        final dose = med['dose'] ?? '';
+        final ki = (med['contraindications'] ?? '').toString();
+        final kiChecked = med['kiChecked'] == true;
+        var line = '\u2022 $name \u2013 $dose';
+        if (ki.isNotEmpty) {
+          line += ' | KI: $ki';
+          line += kiChecked ? ' (geprüft)' : ' (nicht geprüft)';
+        }
+
+        final width = pageWidth - 2 * margin - 20;
+        final height = _measureWrappedTextHeight(line, smallFont, width);
+        ensureSpace(height + 2);
+        currentY += _drawWrappedText(
+          page,
+          line,
+          smallFont,
+          margin + 20,
+          currentY,
+          width,
+        ) + 2;
+      }
+      return currentY;
+    }
 
     // Titel
     final String missionNr =
@@ -82,6 +157,7 @@ class PDFExportService {
           );
 
     // Patientendaten
+    ensureSpace(18);
     _drawString(page, 
       'Patientendaten',
       subHeadingFont,
@@ -93,6 +169,7 @@ class PDFExportService {
       final nameStr =
           '${patient.firstName ?? ''} ${patient.lastName ?? ''}'.trim();
       if (nameStr.isNotEmpty) {
+        ensureSpace(16);
         _drawString(page, 
           'Name: $nameStr',
           normalFont,
@@ -107,6 +184,7 @@ class PDFExportService {
       }
 
       if (patient.dateOfBirth != null) {
+        ensureSpace(16);
         final ageStr = patient.age != null ? ' (${patient.age} Jahre)' : '';
         _drawString(page, 
           'Geburtsdatum: ${DateFormat('dd.MM.yyyy').format(patient.dateOfBirth!)}$ageStr',
@@ -122,6 +200,7 @@ class PDFExportService {
       }
 
       if (patient.gender != null) {
+        ensureSpace(16);
         const genderLabels = {
           Gender.male: 'Männlich',
           Gender.female: 'Weiblich',
@@ -165,6 +244,7 @@ class PDFExportService {
 
     // ABCDE Assessments
     if (abcdeAssessments.isNotEmpty) {
+      ensureSpace(18);
       _drawString(page, 
         'ABCDE Assessments',
         subHeadingFont,
@@ -488,6 +568,7 @@ class PDFExportService {
         assessment.samplerRiskFactors,
       ].any((v) => v?.isNotEmpty ?? false)) {
         currentY += 5;
+        ensureSpace(18);
         _drawString(page, 
           'SAMPLER Schema (Anamnese)',
           subHeadingFont,
@@ -563,6 +644,7 @@ class PDFExportService {
     // Messwerttabelle (Vitalparameter)
     if (vitalSigns.isNotEmpty) {
       currentY += 5;
+      ensureSpace(18);
       _drawString(page, 
         'Vitalparameter',
         subHeadingFont,
@@ -586,6 +668,7 @@ class PDFExportService {
       double colX = margin;
 
       // Header-Zeile
+      ensureSpace(16);
       page.graphics.drawRectangle(
         brush: PdfSolidBrush(PdfColor(230, 230, 230)),
         pen: PdfPen(PdfColor(0, 0, 0), width: 1),
@@ -608,6 +691,7 @@ class PDFExportService {
 
       final int maxRows = 10;
       for (int i = 0; i < sortedVitals.length && i < maxRows; i++) {
+        ensureSpace(14);
         final vital = sortedVitals[i];
         final String timeStr = DateFormat('HH:mm').format(vital.timestamp);
 
@@ -645,6 +729,7 @@ class PDFExportService {
     // Freitextfeld aus E - Situation vor Ort / Einsatzablauf
     if (latestAssessment?.situationNotes?.isNotEmpty ?? false) {
       currentY += 4;
+      ensureSpace(16);
       _drawString(page, 
         'Situation vor Ort / Einsatzablauf:',
         subHeadingFont,
@@ -653,6 +738,12 @@ class PDFExportService {
       currentY += 16;
       // Mehrzeiligen Text zeichnen
       final double availW = pageWidth - 2 * margin - 10;
+      final double textHeight = _measureWrappedTextHeight(
+        latestAssessment!.situationNotes!,
+        normalFont,
+        availW,
+      );
+      ensureSpace(textHeight + 8);
       final double textH = _drawWrappedText(
         page,
         latestAssessment!.situationNotes!,
@@ -669,6 +760,7 @@ class PDFExportService {
         ((isbar.assessment?.isNotEmpty ?? false) ||
             (isbar.recommendation?.isNotEmpty ?? false))) {
       currentY += 5;
+      ensureSpace(18);
       _drawString(page, 
         'ISBAR - Einschätzung & Empfehlung',
         subHeadingFont,
@@ -702,6 +794,7 @@ class PDFExportService {
         ..sort((a, b) => a.performedAt.compareTo(b.performedAt));
 
       currentY += 5;
+      ensureSpace(18);
       _drawString(page, 
         'Massnahmen',
         subHeadingFont,
@@ -714,20 +807,27 @@ class PDFExportService {
         final String label = measure.displayName;
         final String notesPart =
             (measure.notes?.isNotEmpty ?? false) ? ' - ${measure.notes}' : '';
+        final String text = '\u2022 $timeStr: $label$notesPart';
+        final double width = pageWidth - 2 * margin - 10;
+        final double height = _measureWrappedTextHeight(
+          text,
+          normalFont,
+          width,
+        );
+        ensureSpace(height + 2);
         final double lineHeight = _drawWrappedText(
           page,
-          '\u2022 $timeStr: $label$notesPart',
+          text,
           normalFont,
           margin + 10,
           currentY,
-          pageWidth - 2 * margin - 10,
+          width,
         );
         currentY += lineHeight + 2;
       }
     }
 
     // ==================== UNTERSCHRIFTSBEREICH ====================
-    const double signatureBlockHeight = 90;
     final double bottomY = pageHeight - margin - signatureBlockHeight;
 
     // Trennlinie
@@ -797,29 +897,6 @@ class PDFExportService {
     await Printing.layoutPdf(onLayout: (_) async => pdfBytes);
   }
 
-  static double _drawField(
-    PdfPage page,
-    String label,
-    String? value,
-    PdfFont font,
-    double margin,
-    double currentY,
-    double pageWidth,
-  ) {
-    if (value?.isNotEmpty ?? false) {
-      return currentY +
-          _drawWrappedText(
-            page,
-            '$label: $value',
-            font,
-            margin + 10,
-            currentY,
-            pageWidth - 2 * margin - 10,
-          );
-    }
-    return currentY;
-  }
-
   /// Zeichen außerhalb von Windows-1252, die sinnvoll ersetzt werden können.
   static const Map<int, String> _pdfCharReplacements = {
     0x2080: '0', 0x2081: '1', 0x2082: '2', 0x2083: '3', 0x2084: '4',
@@ -876,14 +953,8 @@ class PDFExportService {
     double y,
     double width,
   ) {
-    text = _pdfSafe(text);
     final format = PdfStringFormat(wordWrap: PdfWordWrapType.word);
-    final textSize = font.measureString(
-      text,
-      layoutArea: Size(width, 10000),
-      format: format,
-    );
-    final double height = textSize.height > 0 ? textSize.height + 2 : 14;
+    final double height = _measureWrappedTextHeight(text, font, width);
 
     _drawString(page, 
       text,
@@ -894,45 +965,18 @@ class PDFExportService {
     return height;
   }
 
-  /// Zeichnet Medikamenten-Auflistung mit Kontraindikationen im PDF
-  static double _drawMedications(
-    PdfPage page,
-    String? medicationsText,
-    PdfFont normalFont,
-    PdfFont smallFont,
-    double margin,
-    double currentY,
-    double pageWidth,
+  static double _measureWrappedTextHeight(
+    String text,
+    PdfFont font,
+    double width,
   ) {
-    if (medicationsText == null || medicationsText.isEmpty) return currentY;
-
-    final meds = MedicationSerializer.parseForPdf(medicationsText);
-    if (meds.isEmpty) return currentY;
-
-    for (final med in meds) {
-      final name = med['name'] ?? '';
-      final dose = med['dose'] ?? '';
-      final ki = (med['contraindications'] ?? '').toString();
-      final kiChecked = med['kiChecked'] == true;
-
-      // Medikament + Dosis
-      String line = '\u2022 $name \u2013 $dose';
-      if (ki.isNotEmpty) {
-        line += ' | KI: $ki';
-        line += kiChecked ? ' (geprüft)' : ' (nicht geprüft)';
-      }
-
-      final double availableWidth = pageWidth - 2 * margin - 20;
-      final double lineHeight = _drawWrappedText(
-        page,
-        line,
-        smallFont,
-        margin + 20,
-        currentY,
-        availableWidth,
-      );
-      currentY += lineHeight + 2;
-    }
-    return currentY;
+    final safeText = _pdfSafe(text);
+    final format = PdfStringFormat(wordWrap: PdfWordWrapType.word);
+    final textSize = font.measureString(
+      safeText,
+      layoutArea: Size(width, 10000),
+      format: format,
+    );
+    return textSize.height > 0 ? textSize.height + 2 : 14;
   }
 }
