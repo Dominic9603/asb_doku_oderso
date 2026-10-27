@@ -7,7 +7,7 @@ import '../providers/mission_provider.dart';
 import '../models/abcde_assessment.dart';
 import '../../medications/providers/medication_provider.dart';
 import '../../medications/models/medication.dart';
-import '../../../core/utils/scaffold_messenger_key.dart';
+import '../../../core/utils/top_notification.dart';
 
 class CPRTab extends StatefulWidget {
   const CPRTab({super.key});
@@ -80,9 +80,7 @@ class _CPRTabState extends State<CPRTab> {
 
   Future<void> _addMedication(List<Medication> allMeds) async {
     if (_selectedMedId == null) {
-      scaffoldMessengerKey.currentState?.showSnackBar(
-        const SnackBar(content: Text('Bitte Medikament auswählen')),
-      );
+      TopNotification.show('Bitte Medikament auswählen');
       return;
     }
 
@@ -147,21 +145,18 @@ class _CPRTabState extends State<CPRTab> {
       await provider.addOrUpdateABCDE(updated);
 
       if (mounted) {
-        scaffoldMessengerKey.currentState?.showSnackBar(
-          const SnackBar(
-            content: Text('CPR gespeichert'),
-            backgroundColor: AppColors.success,
-          ),
+        TopNotification.show(
+          'CPR gespeichert',
+          backgroundColor: AppColors.success,
         );
       }
     } catch (e) {
       print('❌ Fehler beim Speichern von CPR: $e');
       if (mounted) {
-        scaffoldMessengerKey.currentState?.showSnackBar(
-          SnackBar(
-            content: Text('Fehler beim Speichern: $e'),
-            backgroundColor: AppColors.critical,
-          ),
+        TopNotification.show(
+          'Fehler beim Speichern: $e',
+          backgroundColor: AppColors.critical,
+          duration: const Duration(milliseconds: 2400),
         );
       }
     }

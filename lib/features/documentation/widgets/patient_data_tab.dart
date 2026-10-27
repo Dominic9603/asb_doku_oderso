@@ -6,7 +6,7 @@ import 'package:intl/intl.dart';
 import '../../../shared/theme/app_theme.dart';
 import '../providers/mission_provider.dart';
 import '../models/patient.dart';
-import '../../../core/utils/scaffold_messenger_key.dart';
+import '../../../core/utils/top_notification.dart';
 
 /// Fügt beim Tippen automatisch Punkte im Format TT.MM.JJJJ ein.
 class _DateInputFormatter extends TextInputFormatter {
@@ -135,12 +135,9 @@ class _PatientDataTabState extends State<PatientDataTab> {
     await provider.updatePatient(updatedPatient);
 
     if (mounted) {
-      scaffoldMessengerKey.currentState?.showSnackBar(
-        const SnackBar(
-          content: Text('Patientendaten gespeichert'),
-          backgroundColor: AppColors.success,
-          duration: Duration(seconds: 2),
-        ),
+      TopNotification.show(
+        'Patientendaten gespeichert',
+        backgroundColor: AppColors.success,
       );
     }
   }

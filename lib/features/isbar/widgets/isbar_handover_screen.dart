@@ -4,7 +4,7 @@ import 'package:provider/provider.dart';
 import '../../../shared/theme/app_theme.dart';
 import '../../documentation/providers/mission_provider.dart';
 import '../providers/isbar_provider.dart';
-import '../../../core/utils/scaffold_messenger_key.dart';
+import '../../../core/utils/top_notification.dart';
 
 class ISBARHandoverScreen extends StatefulWidget {
   const ISBARHandoverScreen({super.key});
@@ -82,11 +82,9 @@ class _ISBARHandoverScreenState extends State<ISBARHandoverScreen> {
         );
 
     if (!mounted) return;
-    scaffoldMessengerKey.currentState?.showSnackBar(
-      const SnackBar(
-        content: Text('ISBAR gespeichert'),
-        backgroundColor: AppColors.success,
-      ),
+    TopNotification.show(
+      'ISBAR gespeichert',
+      backgroundColor: AppColors.success,
     );
   }
 

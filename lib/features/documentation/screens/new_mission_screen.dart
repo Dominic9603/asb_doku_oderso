@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../providers/mission_provider.dart';
-import '../../../core/utils/scaffold_messenger_key.dart';
+import '../../../core/utils/top_notification.dart';
 
 class NewMissionScreen extends StatefulWidget {
   const NewMissionScreen({super.key});
@@ -36,11 +36,9 @@ class _NewMissionScreenState extends State<NewMissionScreen> {
     
     if (mounted) {
       Navigator.of(context).pop();
-      scaffoldMessengerKey.currentState?.showSnackBar(
-        const SnackBar(
-          content: Text('Einsatz erfolgreich erstellt'),
-          backgroundColor: Colors.green,
-        ),
+      TopNotification.show(
+        'Einsatz erfolgreich erstellt',
+        backgroundColor: Colors.green,
       );
     }
   }

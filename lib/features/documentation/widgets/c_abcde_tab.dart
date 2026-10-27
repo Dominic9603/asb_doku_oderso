@@ -3,7 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../providers/mission_provider.dart';
 import '../models/abcde_assessment.dart';
-import '../../../core/utils/scaffold_messenger_key.dart';
+import '../../../core/utils/top_notification.dart';
 import 'c_tab.dart';
 import 'a_tab.dart';
 import 'b_tab.dart';
@@ -132,12 +132,8 @@ class _CABCDENavTabState extends State<CABCDENavTab>
     _c2TabKey.currentState?.resetToDefaults();
     // Springe zum A-Tab, damit direkt mit der Neuerhebung begonnen werden kann.
     _subTabController.animateTo(1);
-    scaffoldMessengerKey.currentState?.showSnackBar(
-      const SnackBar(
-        content: Text(
-          'Neue Baseline gestartet – bitte A, B und C erneut beurteilen.',
-        ),
-      ),
+    TopNotification.show(
+      'Neue Baseline gestartet – bitte A, B und C erneut beurteilen.',
     );
   }
 

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:rescue_doc/core/services/license_service.dart';
 import 'package:rescue_doc/features/authentication/models/user_info.dart';
-import '../../../core/utils/scaffold_messenger_key.dart';
+import '../../../core/utils/top_notification.dart';
 
 /// Screen zum Anzeigen und Bearbeiten der Benutzerdaten (Profil-Seite).
 /// Zugänglich über den Profil-Button in der MissionListScreen-AppBar.
@@ -74,18 +74,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
       await widget.licenseService.saveUserInfo(userInfo);
 
       if (!mounted) return;
-      scaffoldMessengerKey.currentState?.showSnackBar(
-        const SnackBar(
-          content: Text('✅ Benutzerdaten gespeichert'),
-          backgroundColor: Colors.green,
-          duration: Duration(seconds: 2),
-        ),
+      TopNotification.show(
+        '✅ Benutzerdaten gespeichert',
+        backgroundColor: Colors.green,
       );
       Navigator.of(context).pop();
     } catch (e) {
       if (!mounted) return;
-      scaffoldMessengerKey.currentState?.showSnackBar(
-        SnackBar(content: Text('Fehler beim Speichern: $e')),
+      TopNotification.show(
+        'Fehler beim Speichern: $e',
+        duration: const Duration(milliseconds: 2400),
       );
     } finally {
       if (mounted) setState(() => _isSaving = false);

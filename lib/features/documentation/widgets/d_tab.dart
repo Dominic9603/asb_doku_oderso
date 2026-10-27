@@ -7,7 +7,7 @@ import '../../../core/utils/medication_serializer.dart';
 import '../providers/mission_provider.dart';
 import '../models/abcde_assessment.dart';
 import 'medications_section_widget.dart';
-import '../../../core/utils/scaffold_messenger_key.dart';
+import '../../../core/utils/top_notification.dart';
 
 class DTab extends StatefulWidget {
   const DTab({super.key});
@@ -109,10 +109,7 @@ class _DTabState extends State<DTab> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          title,
-          style: const TextStyle(fontWeight: FontWeight.bold),
-        ),
+        Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
         const SizedBox(height: 4),
         Wrap(
           spacing: 8,
@@ -122,9 +119,7 @@ class _DTabState extends State<DTab> {
               label: Text(v.toString()),
               selected: isSelected,
               selectedColor: AppColors.primary,
-              labelStyle: TextStyle(
-                color: isSelected ? Colors.white : null,
-              ),
+              labelStyle: TextStyle(color: isSelected ? Colors.white : null),
               onSelected: (_) => onChanged(v),
             );
           }).toList(),
@@ -190,11 +185,9 @@ class _DTabState extends State<DTab> {
     await provider.addOrUpdateABCDE(updated);
 
     if (mounted) {
-      scaffoldMessengerKey.currentState?.showSnackBar(
-        const SnackBar(
-          content: Text('D - Disability gespeichert'),
-          backgroundColor: AppColors.success,
-        ),
+      TopNotification.show(
+        'D - Disability gespeichert',
+        backgroundColor: AppColors.success,
       );
     }
   }
@@ -317,8 +310,9 @@ class _DTabState extends State<DTab> {
                         selected: _lightReaction == 'normal',
                         selectedColor: AppColors.primary,
                         labelStyle: TextStyle(
-                          color:
-                              _lightReaction == 'normal' ? Colors.white : null,
+                          color: _lightReaction == 'normal'
+                              ? Colors.white
+                              : null,
                         ),
                         onSelected: (_) {
                           setState(() => _lightReaction = 'normal');
@@ -452,13 +446,15 @@ class _DTabState extends State<DTab> {
                       selected: _befastResult == 'auffällig',
                       selectedColor: AppColors.critical,
                       labelStyle: TextStyle(
-                        color:
-                            _befastResult == 'auffällig' ? Colors.white : null,
+                        color: _befastResult == 'auffällig'
+                            ? Colors.white
+                            : null,
                       ),
                       onSelected: (_) {
                         setState(() {
-                          _befastResult =
-                              _befastResult == 'auffällig' ? null : 'auffällig';
+                          _befastResult = _befastResult == 'auffällig'
+                              ? null
+                              : 'auffällig';
                         });
                       },
                     ),
@@ -474,10 +470,11 @@ class _DTabState extends State<DTab> {
                     suffixText: 'mg/dl',
                     prefixIcon: Icon(Icons.water_drop),
                   ),
-                  keyboardType:
-                      const TextInputType.numberWithOptions(decimal: true),
+                  keyboardType: const TextInputType.numberWithOptions(
+                    decimal: true,
+                  ),
                   inputFormatters: [
-                    FilteringTextInputFormatter.allow(RegExp(r'[0-9.]'))
+                    FilteringTextInputFormatter.allow(RegExp(r'[0-9.]')),
                   ],
                 ),
 

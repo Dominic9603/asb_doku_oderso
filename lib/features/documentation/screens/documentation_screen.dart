@@ -14,7 +14,7 @@ import '../widgets/measures_tab.dart';
 import '../widgets/vital_signs_tab.dart';
 import '../../isbar/screens/isbar_screen.dart';
 import '../../isbar/providers/isbar_provider.dart';
-import '../../../core/utils/scaffold_messenger_key.dart';
+import '../../../core/utils/top_notification.dart';
 
 class DocumentationScreen extends StatefulWidget {
   final String missionId;
@@ -74,11 +74,9 @@ class _DocumentationScreenState extends State<DocumentationScreen>
       await context.read<MissionProvider>().completeMission();
       if (mounted) {
         Navigator.of(context).pop();
-        scaffoldMessengerKey.currentState?.showSnackBar(
-          const SnackBar(
-            content: Text('Einsatz erfolgreich abgeschlossen'),
-            backgroundColor: AppColors.success,
-          ),
+        TopNotification.show(
+          'Einsatz erfolgreich abgeschlossen',
+          backgroundColor: AppColors.success,
         );
       }
     }
@@ -116,12 +114,9 @@ class _DocumentationScreenState extends State<DocumentationScreen>
             result.isEmpty ? null : result,
           );
       setState(() {});
-      scaffoldMessengerKey.currentState?.showSnackBar(
-        const SnackBar(
-          content: Text('Einsatznummer aktualisiert'),
-          backgroundColor: AppColors.success,
-          duration: Duration(seconds: 2),
-        ),
+      TopNotification.show(
+        'Einsatznummer aktualisiert',
+        backgroundColor: AppColors.success,
       );
     }
   }
@@ -139,24 +134,18 @@ class _DocumentationScreenState extends State<DocumentationScreen>
 
       // Ladeindikator
       if (mounted) {
-        scaffoldMessengerKey.currentState?.showSnackBar(
-          const SnackBar(
-            content: Row(
-              children: [
-                SizedBox(
-                  width: 20,
-                  height: 20,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    color: Colors.white,
-                  ),
-                ),
-                SizedBox(width: 12),
-                Text('PDF wird erstellt…'),
-              ],
+        TopNotification.show(
+          'PDF wird erstellt…',
+          leading: const SizedBox(
+            width: 20,
+            height: 20,
+            child: CircularProgressIndicator(
+              strokeWidth: 2,
+              color: Colors.white,
             ),
-            duration: Duration(seconds: 10),
           ),
+          backgroundColor: Colors.black87,
+          duration: null,
         );
       }
 
@@ -182,13 +171,15 @@ class _DocumentationScreenState extends State<DocumentationScreen>
       );
 
       if (mounted) {
-        scaffoldMessengerKey.currentState?.hideCurrentSnackBar();
+        TopNotification.hide();
       }
     } catch (e) {
       if (mounted) {
-        scaffoldMessengerKey.currentState?.hideCurrentSnackBar();
-        scaffoldMessengerKey.currentState?.showSnackBar(
-          SnackBar(content: Text('Fehler beim Erstellen der PDF: $e')),
+        TopNotification.hide();
+        TopNotification.show(
+          'Fehler beim Erstellen der PDF: $e',
+          backgroundColor: AppColors.critical,
+          duration: const Duration(milliseconds: 2400),
         );
       }
     }

@@ -6,7 +6,7 @@ import '../../../shared/theme/app_theme.dart';
 import '../../../core/utils/medication_serializer.dart';
 import '../providers/mission_provider.dart';
 import '../models/abcde_assessment.dart';
-import '../../../core/utils/scaffold_messenger_key.dart';
+import '../../../core/utils/top_notification.dart';
 import 'medications_section_widget.dart';
 
 class ETab extends StatefulWidget {
@@ -140,11 +140,9 @@ class _ETabState extends State<ETab> {
     await provider.addOrUpdateABCDE(updated);
 
     if (mounted) {
-      scaffoldMessengerKey.currentState?.showSnackBar(
-        const SnackBar(
-          content: Text('E - Exposure gespeichert'),
-          backgroundColor: AppColors.success,
-        ),
+      TopNotification.show(
+        'E - Exposure gespeichert',
+        backgroundColor: AppColors.success,
       );
     }
   }

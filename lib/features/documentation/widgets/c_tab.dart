@@ -6,7 +6,7 @@ import '../../../core/utils/medication_serializer.dart';
 import '../providers/mission_provider.dart';
 import '../models/abcde_assessment.dart';
 import 'medications_section_widget.dart';
-import '../../../core/utils/scaffold_messenger_key.dart';
+import '../../../core/utils/top_notification.dart';
 
 class CTab extends StatefulWidget {
   const CTab({super.key});
@@ -33,7 +33,7 @@ class _CTabState extends State<CTab> {
   final List<String> _ivSitesPreset = ['Kubita', 'Handrücken', 'Unterarm'];
   final _ivSiteController = TextEditingController();
   String? _ivSide; // 'links' / 'rechts'
-  
+
   // Medikamente für Circulation (neues System)
   final List<Map<String, dynamic>> _circulationMedications = [];
 
@@ -99,55 +99,57 @@ class _CTabState extends State<CTab> {
       final mission = provider.currentMission;
       if (mission == null) return;
 
-      final current = provider.latestABCDE ?? ABCDEAssessment.create(mission.id);
+      final current =
+          provider.latestABCDE ?? ABCDEAssessment.create(mission.id);
 
-    final bleedingControl = _bleedingControlController.text.isEmpty
-        ? null
-        : _bleedingControlController.text;
-
-    final cInterventionC = _buildCirculationInterventionC();
-    // Bestehende circulationIntervention aus anderen Abschnitten nicht überschreiben:
-    final existingCirc = current.circulationIntervention;
-    String? newCirc;
-    if (existingCirc == null || existingCirc.isEmpty) {
-      newCirc = cInterventionC.isEmpty ? null : cInterventionC;
-    } else if (cInterventionC.isEmpty) {
-      newCirc = existingCirc;
-    } else {
-      newCirc = '$existingCirc | $cInterventionC';
-    }
-    
-    // Neue Medikamente für Circulation speichern
-    final medicationsText = MedicationSerializer.serialize(_circulationMedications);
-
-    final updated = current.copyWith(
-      externalBleeding: _externalBleeding,
-      bleedingLocation: _bleedingLocationController.text.isEmpty
+      final bleedingControl = _bleedingControlController.text.isEmpty
           ? null
-          : _bleedingLocationController.text,
-      bleedingControl: bleedingControl,
-      circulationIntervention: newCirc,
-      circulationMedications: medicationsText.isEmpty ? null : medicationsText,
-    );
+          : _bleedingControlController.text;
+
+      final cInterventionC = _buildCirculationInterventionC();
+      // Bestehende circulationIntervention aus anderen Abschnitten nicht überschreiben:
+      final existingCirc = current.circulationIntervention;
+      String? newCirc;
+      if (existingCirc == null || existingCirc.isEmpty) {
+        newCirc = cInterventionC.isEmpty ? null : cInterventionC;
+      } else if (cInterventionC.isEmpty) {
+        newCirc = existingCirc;
+      } else {
+        newCirc = '$existingCirc | $cInterventionC';
+      }
+
+      // Neue Medikamente für Circulation speichern
+      final medicationsText = MedicationSerializer.serialize(
+        _circulationMedications,
+      );
+
+      final updated = current.copyWith(
+        externalBleeding: _externalBleeding,
+        bleedingLocation: _bleedingLocationController.text.isEmpty
+            ? null
+            : _bleedingLocationController.text,
+        bleedingControl: bleedingControl,
+        circulationIntervention: newCirc,
+        circulationMedications: medicationsText.isEmpty
+            ? null
+            : medicationsText,
+      );
 
       await provider.addOrUpdateABCDE(updated);
 
       if (mounted) {
-        scaffoldMessengerKey.currentState?.showSnackBar(
-          const SnackBar(
-            content: Text('c - Critical Bleeding gespeichert'),
-            backgroundColor: AppColors.success,
-          ),
+        TopNotification.show(
+          'c - Critical Bleeding gespeichert',
+          backgroundColor: AppColors.success,
         );
       }
     } catch (e) {
       debugPrint('Fehler beim Speichern: $e');
       if (mounted) {
-        scaffoldMessengerKey.currentState?.showSnackBar(
-          SnackBar(
-            content: Text('Fehler beim Speichern: $e'),
-            backgroundColor: Colors.red,
-          ),
+        TopNotification.show(
+          'Fehler beim Speichern: $e',
+          backgroundColor: Colors.red,
+          duration: const Duration(milliseconds: 2400),
         );
       }
     }
@@ -185,8 +187,7 @@ class _CTabState extends State<CTab> {
                   title: const Text('Starke äußere Blutung vorhanden'),
                   secondary: Icon(
                     Icons.bloodtype,
-                    color:
-                        _externalBleeding ? AppColors.critical : Colors.grey,
+                    color: _externalBleeding ? AppColors.critical : Colors.grey,
                   ),
                 ),
 
@@ -215,9 +216,7 @@ class _CTabState extends State<CTab> {
 
                 const SizedBox(height: 16),
 
-                if (showMeasures) ...[
-                  _buildAccessCard(context),
-                ],
+                if (showMeasures) ...[_buildAccessCard(context)],
 
                 const SizedBox(height: 16),
 
@@ -354,7 +353,6 @@ class _CTabState extends State<CTab> {
       ),
     );
   }
-
 }
 
 class _CannulaSize {

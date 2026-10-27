@@ -8,7 +8,7 @@ import '../providers/mission_provider.dart';
 import '../models/abcde_assessment.dart';
 import '../models/measure.dart';
 import 'medications_section_widget.dart';
-import '../../../core/utils/scaffold_messenger_key.dart';
+import '../../../core/utils/top_notification.dart';
 
 class C2Tab extends StatefulWidget {
   const C2Tab({super.key});
@@ -324,11 +324,9 @@ class C2TabState extends State<C2Tab> {
     }
 
     if (mounted) {
-      scaffoldMessengerKey.currentState?.showSnackBar(
-        const SnackBar(
-          content: Text('C - Circulation gespeichert'),
-          backgroundColor: AppColors.success,
-        ),
+      TopNotification.show(
+        'C - Circulation gespeichert',
+        backgroundColor: AppColors.success,
       );
     }
   }

@@ -4,7 +4,7 @@ import 'package:intl/intl.dart';
 
 import '../../../shared/theme/app_theme.dart';
 import '../../../core/utils/medication_serializer.dart';
-import '../../../core/utils/scaffold_messenger_key.dart';
+import '../../../core/utils/top_notification.dart';
 import '../../documentation/models/vital_signs.dart';
 import '../../documentation/models/mission.dart';
 import '../../documentation/providers/mission_provider.dart';
@@ -62,11 +62,9 @@ class _ISBARScreenState extends State<ISBARScreen> {
               : _recommendationController.text.trim(),
         );
     if (mounted) {
-      scaffoldMessengerKey.currentState?.showSnackBar(
-        const SnackBar(
-          content: Text('ISBAR gespeichert'),
-          backgroundColor: AppColors.success,
-        ),
+      TopNotification.show(
+        'ISBAR gespeichert',
+        backgroundColor: AppColors.success,
       );
     }
   }

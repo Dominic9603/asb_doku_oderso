@@ -5,7 +5,7 @@ import 'package:intl/intl.dart';
 import '../../../shared/theme/app_theme.dart';
 import '../providers/mission_provider.dart';
 import '../models/measure.dart';
-import '../../../core/utils/scaffold_messenger_key.dart';
+import '../../../core/utils/top_notification.dart';
 
 /// Definitionen der Sub-Optionen pro Maßnahme
 class _MeasureSubOption {
@@ -529,12 +529,9 @@ class _MeasuresTabState extends State<MeasuresTab> {
 
     final displayName = Measure.create('', type).displayName;
     final timeStr = DateFormat('HH:mm').format(measure.performedAt);
-    scaffoldMessengerKey.currentState?.showSnackBar(
-      SnackBar(
-        content: Text('✓ $displayName um $timeStr gespeichert'),
-        backgroundColor: AppColors.success,
-        duration: const Duration(seconds: 2),
-      ),
+    TopNotification.show(
+      '✓ $displayName um $timeStr gespeichert',
+      backgroundColor: AppColors.success,
     );
   }
 }

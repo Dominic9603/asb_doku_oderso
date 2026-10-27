@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:rescue_doc/core/services/database_service.dart';
 import 'package:rescue_doc/features/medications/models/medication.dart';
 import 'package:uuid/uuid.dart';
-import '../../../core/utils/scaffold_messenger_key.dart';
+import '../../../core/utils/top_notification.dart';
 
 class MedicationEditPage extends StatefulWidget {
   final Medication? initial; // null = neu, sonst bearbeiten
@@ -144,8 +144,9 @@ class _MedicationEditPageState extends State<MedicationEditPage> {
       Navigator.of(context).pop(med);
     } catch (e) {
       if (!mounted) return;
-      scaffoldMessengerKey.currentState?.showSnackBar(
-        SnackBar(content: Text('Fehler beim Speichern: $e')),
+      TopNotification.show(
+        'Fehler beim Speichern: $e',
+        duration: const Duration(milliseconds: 2400),
       );
     }
   }

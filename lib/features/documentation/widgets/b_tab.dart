@@ -8,7 +8,7 @@ import '../providers/mission_provider.dart';
 import '../models/abcde_assessment.dart';
 import '../models/measure.dart';
 import 'medications_section_widget.dart';
-import '../../../core/utils/scaffold_messenger_key.dart';
+import '../../../core/utils/top_notification.dart';
 
 class BTab extends StatefulWidget {
   const BTab({super.key});
@@ -169,11 +169,9 @@ class BTabState extends State<BTab> {
     }
 
     if (mounted) {
-      scaffoldMessengerKey.currentState?.showSnackBar(
-        const SnackBar(
-          content: Text('B - Breathing gespeichert'),
-          backgroundColor: AppColors.success,
-        ),
+      TopNotification.show(
+        'B - Breathing gespeichert',
+        backgroundColor: AppColors.success,
       );
     }
   }

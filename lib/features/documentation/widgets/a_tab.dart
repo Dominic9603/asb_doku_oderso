@@ -7,7 +7,7 @@ import '../providers/mission_provider.dart';
 import '../models/abcde_assessment.dart';
 import '../models/measure.dart';
 import 'medications_section_widget.dart';
-import '../../../core/utils/scaffold_messenger_key.dart';
+import '../../../core/utils/top_notification.dart';
 
 class ATab extends StatefulWidget {
   const ATab({super.key});
@@ -208,21 +208,18 @@ class ATabState extends State<ATab> {
       }
 
       if (mounted) {
-        scaffoldMessengerKey.currentState?.showSnackBar(
-          const SnackBar(
-            content: Text('A - Airway gespeichert'),
-            backgroundColor: AppColors.success,
-          ),
+        TopNotification.show(
+          'A - Airway gespeichert',
+          backgroundColor: AppColors.success,
         );
       }
     } catch (e) {
       print('❌ Fehler beim Speichern von A-Assessment: $e');
       if (mounted) {
-        scaffoldMessengerKey.currentState?.showSnackBar(
-          SnackBar(
-            content: Text('Fehler beim Speichern: $e'),
-            backgroundColor: AppColors.critical,
-          ),
+        TopNotification.show(
+          'Fehler beim Speichern: $e',
+          backgroundColor: AppColors.critical,
+          duration: const Duration(milliseconds: 2400),
         );
       }
     }

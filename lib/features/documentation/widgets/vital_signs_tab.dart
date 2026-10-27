@@ -4,7 +4,7 @@ import 'package:provider/provider.dart';
 
 import '../providers/mission_provider.dart';
 import '../models/vital_signs.dart';
-import '../../../core/utils/scaffold_messenger_key.dart';
+import '../../../core/utils/top_notification.dart';
 
 class VitalSignsTab extends StatefulWidget {
   const VitalSignsTab({super.key});
@@ -105,9 +105,7 @@ class _VitalSignsTabState extends State<VitalSignsTab> {
     });
 
     if (mounted) {
-      scaffoldMessengerKey.currentState?.showSnackBar(
-        const SnackBar(content: Text('Vitalparameter gespeichert')),
-      );
+      TopNotification.show('Vitalparameter gespeichert');
     }
   }
 
