@@ -1,3 +1,4 @@
+import 'dart:math';
 import 'dart:typed_data';
 import 'dart:ui';
 
@@ -16,7 +17,18 @@ import '../utils/medication_serializer.dart';
 
 /// Service zur PDF-Generierung von Einsatzberichten
 class PDFExportService {
+  /// Erzeugt eine zufällige 6-stellige PIN zum Schutz des PDF-Exports.
+  /// Diese sollte dem Empfänger getrennt vom PDF (z.B. telefonisch)
+  /// mitgeteilt werden.
+  static String generatePassword({int length = 6}) {
+    final random = Random.secure();
+    return List.generate(length, (_) => random.nextInt(10)).join();
+  }
+
   /// Generiert PDF-Bytes ohne Druckdialog (z.B. für Upload/Email)
+  ///
+  /// [password] verschlüsselt das PDF (AES-256), falls gesetzt – es lässt
+  /// sich dann nur noch mit diesem Passwort öffnen.
   static Future<Uint8List> generatePdfBytes({
     required Mission mission,
     required Patient? patient,
@@ -25,6 +37,7 @@ class PDFExportService {
     required List<Measure> measures,
     required UserInfo? userInfo,
     ISBARHandover? isbar,
+    String? password,
   }) async {
     print('📋 PDF Export - userInfo: $userInfo');
     print('📋 PDF Export - shortSign: "${userInfo?.shortSign}"');
@@ -900,6 +913,12 @@ class PDFExportService {
       );
     }
 
+    if (password != null && password.isNotEmpty) {
+      document.security.algorithm = PdfEncryptionAlgorithm.aesx256Bit;
+      document.security.userPassword = password;
+      document.security.ownerPassword = password;
+    }
+
     final List<int> bytes = document.saveSync();
     document.dispose();
 
@@ -915,6 +934,7 @@ class PDFExportService {
     required List<Measure> measures,
     required UserInfo? userInfo,
     ISBARHandover? isbar,
+    String? password,
   }) async {
     final pdfBytes = await generatePdfBytes(
       mission: mission,
@@ -924,6 +944,7 @@ class PDFExportService {
       measures: measures,
       userInfo: userInfo,
       isbar: isbar,
+      password: password,
     );
 
     await Printing.layoutPdf(onLayout: (_) async => pdfBytes);

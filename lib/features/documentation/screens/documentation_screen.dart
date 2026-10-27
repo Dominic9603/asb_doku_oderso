@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
 import '../../../shared/theme/app_theme.dart';
@@ -149,9 +150,11 @@ class _DocumentationScreenState extends State<DocumentationScreen>
         );
       }
 
-      // PDF-Bytes generieren
+      // PDF-Bytes generieren (mit automatisch generierter Passwort-PIN
+      // verschlüsselt, damit die Datei nicht ungeschützt verschickt wird)
       final isbarProvider = context.read<ISBARProvider>();
       await isbarProvider.loadForMission(mission.id);
+      final pdfPassword = PDFExportService.generatePassword();
       final pdfBytes = await PDFExportService.generatePdfBytes(
         mission: mission,
         patient: provider.currentPatient,
@@ -160,7 +163,16 @@ class _DocumentationScreenState extends State<DocumentationScreen>
         measures: provider.measures,
         userInfo: userInfo,
         isbar: isbarProvider.current,
+        password: pdfPassword,
       );
+
+      if (mounted) {
+        TopNotification.hide();
+      }
+
+      if (!mounted) return;
+      final shouldContinue = await _showPdfPasswordDialog(pdfPassword);
+      if (shouldContinue != true) return;
 
       final missionNr = mission.missionNumber ?? mission.id.substring(0, 8);
 
@@ -169,10 +181,6 @@ class _DocumentationScreenState extends State<DocumentationScreen>
         pdfBytes: pdfBytes,
         missionNumber: missionNr,
       );
-
-      if (mounted) {
-        TopNotification.hide();
-      }
     } catch (e) {
       if (mounted) {
         TopNotification.hide();
@@ -183,6 +191,60 @@ class _DocumentationScreenState extends State<DocumentationScreen>
         );
       }
     }
+  }
+
+  /// Zeigt die automatisch generierte PDF-Passwort-PIN an, bevor die Datei
+  /// geteilt wird. Der Code soll getrennt vom PDF (z.B. telefonisch) an den
+  /// Empfänger weitergegeben werden, damit die Datei geöffnet werden kann.
+  Future<bool?> _showPdfPasswordDialog(String password) {
+    return showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        title: const Text('PDF ist passwortgeschützt'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Dieses Einsatzbericht-PDF ist mit folgendem Code '
+              'verschlüsselt. Teile ihn auf einem anderen Weg '
+              '(z.B. telefonisch) mit dem Empfänger – nicht zusammen mit '
+              'der Datei selbst:',
+            ),
+            const SizedBox(height: 16),
+            Center(
+              child: SelectableText(
+                password,
+                style: const TextStyle(
+                  fontSize: 28,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 4,
+                ),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton.icon(
+            onPressed: () {
+              Clipboard.setData(ClipboardData(text: password));
+              TopNotification.show('Code kopiert');
+            },
+            icon: const Icon(Icons.copy),
+            label: const Text('Kopieren'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Abbrechen'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Weiter zum Teilen'),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -231,10 +293,10 @@ class _DocumentationScreenState extends State<DocumentationScreen>
           ],
         ),
         actions: [
-          // PDF per Email senden (30-Min-Link)
+          // PDF teilen (passwortgeschützt, PIN wird vor dem Teilen angezeigt)
           IconButton(
             icon: const Icon(Icons.email),
-            tooltip: 'PDF per Email senden',
+            tooltip: 'PDF teilen (passwortgeschützt)',
             onPressed: _sendPdfViaEmail,
           ),
           // ISBAR-Icon
