@@ -228,6 +228,65 @@ class MissionProvider extends ChangeNotifier {
     notifyListeners(); // ← KRITISCH: UI muss benachrichtigt werden
   }
 
+  /// Startet eine neue Baseline-Erhebung für A (Airway), B (Breathing) und
+  /// C (Circulation). Legt dazu einen neuen ABCDEAssessment-Datensatz mit
+  /// eigener ID und aktuellem Zeitstempel an, statt den bestehenden zu
+  /// überschreiben – so bleibt die vorherige Erhebung mit ihrem Zeitstempel
+  /// unverändert in der Dokumentation erhalten (z.B. im PDF-Export), während
+  /// A/B/C für die neue Beurteilung wieder leer sind. c (kritische Blutung),
+  /// D, E, CPR und SAMPLER werden vom letzten Stand übernommen, da sie von
+  /// dieser erneuten ABC-Erhebung nicht betroffen sind.
+  Future<void> startNewBaseline() async {
+    final mission = _currentMission;
+    if (mission == null) return;
+    final previous = latestABCDE;
+
+    final newAssessment = ABCDEAssessment(
+      id: DateTime.now().millisecondsSinceEpoch.toString(),
+      missionId: mission.id,
+      timestamp: DateTime.now(),
+      externalBleeding: previous?.externalBleeding ?? false,
+      bleedingLocation: previous?.bleedingLocation,
+      bleedingControl: previous?.bleedingControl,
+      suspectedDiagnosis: previous?.suspectedDiagnosis,
+      gcsEye: previous?.gcsEye,
+      gcsVerbal: previous?.gcsVerbal,
+      gcsMotor: previous?.gcsMotor,
+      pupilLeft: previous?.pupilLeft,
+      pupilRight: previous?.pupilRight,
+      bloodSugar: previous?.bloodSugar,
+      befastResult: previous?.befastResult,
+      disabilityIssue: previous?.disabilityIssue,
+      disabilityIntervention: previous?.disabilityIntervention,
+      disabilityMedications: previous?.disabilityMedications,
+      temperature: previous?.temperature,
+      injuries: previous?.injuries,
+      environmentalFactors: previous?.environmentalFactors,
+      exposureIssue: previous?.exposureIssue,
+      exposureIntervention: previous?.exposureIntervention,
+      exposureMedications: previous?.exposureMedications,
+      situationNotes: previous?.situationNotes,
+      cprTubusTypes: previous?.cprTubusTypes,
+      cprTubusSizes: previous?.cprTubusSizes,
+      cprShocks: previous?.cprShocks,
+      cprROSC: previous?.cprROSC,
+      cprMedications: previous?.cprMedications,
+      ecgRhythm: previous?.ecgRhythm,
+      eventDescription: previous?.eventDescription,
+      samplerSymptoms: previous?.samplerSymptoms,
+      samplerAllergies: previous?.samplerAllergies,
+      samplerMedications: previous?.samplerMedications,
+      samplerPastMedicalHistory: previous?.samplerPastMedicalHistory,
+      samplerLastOralIntake: previous?.samplerLastOralIntake,
+      samplerEvents: previous?.samplerEvents,
+      samplerRiskFactors: previous?.samplerRiskFactors,
+      // airwayPatent/airwayThreatened/aDocumented sowie alle B/C-Felder
+      // bleiben bewusst auf den Default-Werten (Neuerhebung von A/B/C).
+    );
+
+    await addOrUpdateABCDE(newAssessment);
+  }
+
   Future<void> refresh() async {
     await _loadMissions();
     if (_currentMission != null) {

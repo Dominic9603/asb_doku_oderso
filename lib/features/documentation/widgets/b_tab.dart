@@ -14,10 +14,10 @@ class BTab extends StatefulWidget {
   const BTab({super.key});
 
   @override
-  State<BTab> createState() => _BTabState();
+  State<BTab> createState() => BTabState();
 }
 
-class _BTabState extends State<BTab> {
+class BTabState extends State<BTab> {
   final _respRateController = TextEditingController();
   final _spo2Controller = TextEditingController();
   final _breathingSoundsController = TextEditingController();
@@ -66,7 +66,9 @@ class _BTabState extends State<BTab> {
     }
 
     // Sync von Measures → O2-Checkbox
-    if (provider.currentMeasures.any((m) => m.measureType == MeasureType.oxygenTherapy)) {
+    if (provider.currentMeasures.any(
+      (m) => m.measureType == MeasureType.oxygenTherapy,
+    )) {
       _o2Given = true;
     }
   }
@@ -79,6 +81,23 @@ class _BTabState extends State<BTab> {
     _breathingIssueController.dispose();
     _o2LitersController.dispose();
     super.dispose();
+  }
+
+  /// Setzt den B-Tab auf den Ausgangszustand zurück (für "Baseline erneut
+  /// erheben"). Die vorherige Erhebung bleibt als separater Datensatz mit
+  /// eigenem Zeitstempel in der Dokumentation erhalten.
+  void resetToDefaults() {
+    setState(() {
+      _respRateController.clear();
+      _spo2Controller.clear();
+      _breathingSoundsController.clear();
+      _symmetricBreathing = true;
+      _breathingIssueController.clear();
+      _o2Given = false;
+      _o2LitersController.clear();
+      _o2MaskType = null;
+      _breathingMedications.clear();
+    });
   }
 
   String _buildInterventionText() {
@@ -108,9 +127,11 @@ class _BTabState extends State<BTab> {
     final current = provider.latestABCDE ?? ABCDEAssessment.create(mission.id);
 
     final intervention = _buildInterventionText();
-    
+
     // Neue Medikamente für Breathing speichern
-    final medicationsText = MedicationSerializer.serialize(_breathingMedications);
+    final medicationsText = MedicationSerializer.serialize(
+      _breathingMedications,
+    );
 
     final updated = current.copyWith(
       respiratoryRate: _respRateController.text.isEmpty
@@ -138,9 +159,13 @@ class _BTabState extends State<BTab> {
       final noteParts = <String>[];
       if (_o2MaskType == 'ohne') noteParts.add('Applikation: Maske');
       if (_o2MaskType == 'mit') noteParts.add('Applikation: Reservoirmaske');
-      if (_o2LitersController.text.isNotEmpty) noteParts.add('Fluss (l/min): ${_o2LitersController.text}');
+      if (_o2LitersController.text.isNotEmpty)
+        noteParts.add('Fluss (l/min): ${_o2LitersController.text}');
       if (noteParts.isNotEmpty) notes = noteParts.join(', ');
-      await provider.ensureMeasureExists(MeasureType.oxygenTherapy, notes: notes);
+      await provider.ensureMeasureExists(
+        MeasureType.oxygenTherapy,
+        notes: notes,
+      );
     }
 
     if (mounted) {
@@ -155,7 +180,6 @@ class _BTabState extends State<BTab> {
 
   @override
   Widget build(BuildContext context) {
-
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
@@ -187,7 +211,9 @@ class _BTabState extends State<BTab> {
                           prefixIcon: Icon(Icons.wind_power),
                         ),
                         keyboardType: TextInputType.number,
-                        inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                        inputFormatters: [
+                          FilteringTextInputFormatter.digitsOnly,
+                        ],
                       ),
                     ),
                     const SizedBox(width: 12),
@@ -199,8 +225,9 @@ class _BTabState extends State<BTab> {
                           suffixText: '%',
                           prefixIcon: Icon(Icons.air),
                         ),
-                        keyboardType:
-                            const TextInputType.numberWithOptions(decimal: true),
+                        keyboardType: const TextInputType.numberWithOptions(
+                          decimal: true,
+                        ),
                       ),
                     ),
                   ],
@@ -227,8 +254,9 @@ class _BTabState extends State<BTab> {
                   title: const Text('Symmetrische Thoraxexkursion'),
                   secondary: Icon(
                     Icons.sync_alt,
-                    color:
-                        _symmetricBreathing ? AppColors.success : AppColors.warning,
+                    color: _symmetricBreathing
+                        ? AppColors.success
+                        : AppColors.warning,
                   ),
                 ),
 
@@ -307,10 +335,11 @@ class _BTabState extends State<BTab> {
                         suffixText: 'L/min',
                         prefixIcon: Icon(Icons.local_fire_department),
                       ),
-                      keyboardType:
-                          const TextInputType.numberWithOptions(decimal: true),
+                      keyboardType: const TextInputType.numberWithOptions(
+                        decimal: true,
+                      ),
                       inputFormatters: [
-                        FilteringTextInputFormatter.allow(RegExp(r'[0-9.]'))
+                        FilteringTextInputFormatter.allow(RegExp(r'[0-9.]')),
                       ],
                     ),
                   ),
@@ -354,5 +383,4 @@ class _BTabState extends State<BTab> {
       ),
     );
   }
-
 }

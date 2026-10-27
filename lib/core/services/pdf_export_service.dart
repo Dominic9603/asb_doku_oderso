@@ -51,6 +51,11 @@ class PDFExportService {
     );
     final PdfFont normalFont = PdfStandardFont(PdfFontFamily.helvetica, 10);
     final PdfFont smallFont = PdfStandardFont(PdfFontFamily.helvetica, 8);
+    final PdfFont boldNormalFont = PdfStandardFont(
+      PdfFontFamily.helvetica,
+      10,
+      style: PdfFontStyle.bold,
+    );
 
     void ensureSpace(double height) {
       if (currentY + height > contentBottomY) {
@@ -296,9 +301,20 @@ class PDFExportService {
       }
 
       // A - Airway
+      if (assessment.aDocumented) {
+        currentY = _drawField(
+          page,
+          'Atemweg',
+          assessment.airwayThreatened ? 'bedroht' : 'frei',
+          normalFont,
+          margin,
+          currentY,
+          pageWidth,
+        );
+      }
       currentY = _drawField(
         page,
-        'Atemweg',
+        'Atemweg Problem',
         assessment.airwayIssue,
         normalFont,
         margin,
@@ -638,6 +654,95 @@ class PDFExportService {
           currentY,
           pageWidth,
         );
+      }
+
+      // ABC-Verlauf: Bei mehreren Erhebungen (z.B. nach "Baseline erneut
+      // erheben") werden alle A/B/C-Beurteilungen chronologisch mit
+      // Zeitstempel aufgeführt, damit auch frühere/korrigierte Erhebungen
+      // nachvollziehbar in der Dokumentation sichtbar bleiben.
+      if (abcdeAssessments.length > 1) {
+        final history = [...abcdeAssessments]
+          ..sort((a, b) => a.timestamp.compareTo(b.timestamp));
+
+        currentY += 5;
+        ensureSpace(18);
+        _drawString(
+          page,
+          'ABC-Verlauf (Baseline-Erhebungen)',
+          subHeadingFont,
+          bounds: Rect.fromLTWH(margin, currentY, pageWidth - 2 * margin, 14),
+        );
+        currentY += 18;
+
+        for (final entry in history) {
+          final timeLabel = DateFormat('HH:mm').format(entry.timestamp);
+          final isLatest = entry.id == assessment.id;
+          ensureSpace(15);
+          _drawString(
+            page,
+            '$timeLabel Uhr${isLatest ? ' (aktuell)' : ''}',
+            boldNormalFont,
+            bounds: Rect.fromLTWH(
+              margin + 5,
+              currentY,
+              pageWidth - 2 * margin - 5,
+              14,
+            ),
+          );
+          currentY += 15;
+
+          if (entry.aDocumented) {
+            currentY = _drawField(
+              page,
+              'Atemweg',
+              entry.airwayThreatened ? 'bedroht' : 'frei',
+              normalFont,
+              margin,
+              currentY,
+              pageWidth,
+            );
+          }
+          final historyBreathingParts = <String>[
+            if (entry.respiratoryRate != null)
+              'AF: ${entry.respiratoryRate}/min',
+            if (entry.spo2 != null) 'SpO2: ${entry.spo2}%',
+            if (entry.breathingSounds?.isNotEmpty ?? false)
+              'Ausku.: ${entry.breathingSounds}',
+            if (!entry.symmetricBreathing) 'Thoraxexkursion asymmetrisch',
+          ];
+          currentY = _drawField(
+            page,
+            'Atmung',
+            historyBreathingParts.isNotEmpty
+                ? historyBreathingParts.join(' | ')
+                : null,
+            normalFont,
+            margin,
+            currentY,
+            pageWidth,
+          );
+          final historyCircParts = <String>[
+            if (entry.heartRate != null) 'HF: ${entry.heartRate}/min',
+            if (entry.systolicBP != null)
+              'RR: ${entry.systolicBP}/${entry.diastolicBP ?? '-'} mmHg',
+            if (entry.pulseQuality?.isNotEmpty ?? false)
+              'Puls: ${entry.pulseQuality}',
+            if (entry.skinColor?.isNotEmpty ?? false)
+              'Haut: ${entry.skinColor}',
+            if (entry.capillaryRefill?.isNotEmpty ?? false)
+              'KFZ: ${entry.capillaryRefill}',
+          ];
+          currentY = _drawField(
+            page,
+            'Zirkulation',
+            historyCircParts.isNotEmpty ? historyCircParts.join(' | ') : null,
+            normalFont,
+            margin,
+            currentY,
+            pageWidth,
+          );
+          currentY += 4;
+        }
       }
     }
 

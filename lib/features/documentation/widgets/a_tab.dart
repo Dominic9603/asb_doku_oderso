@@ -13,15 +13,15 @@ class ATab extends StatefulWidget {
   const ATab({super.key});
 
   @override
-  State<ATab> createState() => _ATabState();
+  State<ATab> createState() => ATabState();
 }
 
-class _ATabState extends State<ATab> {
+class ATabState extends State<ATab> {
   bool _airwayPatent = true;
   bool _airwayThreatened = false;
   final _airwayIssueController = TextEditingController();
   final List<Map<String, dynamic>> _airwayMedications = []; // [{name, dose}]
-  
+
   // Maßnahmen Flags
   bool _mHeadTilt = false;
   bool _mChinLift = false;
@@ -29,15 +29,15 @@ class _ATabState extends State<ATab> {
   bool _mGuedel = false;
   bool _mWendl = false;
   bool _mSuction = false;
-  
+
   // Guedel-Größen (vereinfachte gängige Größen)
   final List<String> _guedelSizes = ['0', '1', '2', '3', '4', '5'];
   String? _selectedGuedelSize;
-  
+
   // Wendl-Größen (typische mm-Angaben)
-  final List<String> _wendlSizes = ['28', '30','32'];
+  final List<String> _wendlSizes = ['28', '30', '32'];
   String? _selectedWendlSize;
-  
+
   @override
   void initState() {
     super.initState();
@@ -47,12 +47,12 @@ class _ATabState extends State<ATab> {
       _airwayPatent = abcde.airwayPatent;
       _airwayThreatened = abcde.airwayThreatened;
       _airwayIssueController.text = abcde.airwayIssue ?? '';
-      
+
       // Parse airwayMedications zurück in Liste (JSON oder altes Format)
       _airwayMedications.addAll(
         MedicationSerializer.deserialize(abcde.airwayMedications),
       );
-      
+
       // einfache Rückwärtszuordnung aus airwayIntervention
       final ai = abcde.airwayIntervention ?? '';
       _mHeadTilt = ai.contains('Kopf überstrecken');
@@ -74,7 +74,9 @@ class _ATabState extends State<ATab> {
     if (measures.any((m) => m.measureType == MeasureType.guedeltubus)) {
       _mGuedel = true;
       if (_selectedGuedelSize == null) {
-        final g = measures.where((m) => m.measureType == MeasureType.guedeltubus).last;
+        final g = measures
+            .where((m) => m.measureType == MeasureType.guedeltubus)
+            .last;
         final match = RegExp(r'Größe:\s*(\S+)').firstMatch(g.notes ?? '');
         if (match != null) _selectedGuedelSize = match.group(1);
       }
@@ -82,7 +84,9 @@ class _ATabState extends State<ATab> {
     if (measures.any((m) => m.measureType == MeasureType.wendltubus)) {
       _mWendl = true;
       if (_selectedWendlSize == null) {
-        final w = measures.where((m) => m.measureType == MeasureType.wendltubus).last;
+        final w = measures
+            .where((m) => m.measureType == MeasureType.wendltubus)
+            .last;
         final match = RegExp(r'Größe:\s*(\S+)').firstMatch(w.notes ?? '');
         if (match != null) _selectedWendlSize = match.group(1);
       }
@@ -91,7 +95,7 @@ class _ATabState extends State<ATab> {
       _mSuction = true;
     }
   }
-  
+
   @override
   void dispose() {
     _airwayIssueController.dispose();
@@ -102,7 +106,32 @@ class _ATabState extends State<ATab> {
     }
     super.dispose();
   }
-  
+
+  /// Setzt den A-Tab auf den Ausgangszustand zurück (für "Baseline erneut
+  /// erheben"). Die vorherige Erhebung bleibt als separater Datensatz mit
+  /// eigenem Zeitstempel in der Dokumentation erhalten.
+  void resetToDefaults() {
+    setState(() {
+      _airwayPatent = true;
+      _airwayThreatened = false;
+      _airwayIssueController.clear();
+      for (final med in _airwayMedications) {
+        if (med['controller'] != null) {
+          (med['controller'] as TextEditingController).dispose();
+        }
+      }
+      _airwayMedications.clear();
+      _mHeadTilt = false;
+      _mChinLift = false;
+      _mEsmarch = false;
+      _mGuedel = false;
+      _mWendl = false;
+      _mSuction = false;
+      _selectedGuedelSize = null;
+      _selectedWendlSize = null;
+    });
+  }
+
   String _buildInterventionText() {
     final parts = <String>[];
     if (_mHeadTilt) parts.add('Kopf überstrecken');
@@ -130,7 +159,7 @@ class _ATabState extends State<ATab> {
   String _buildMedicationsText() {
     return MedicationSerializer.serialize(_airwayMedications);
   }
-  
+
   Future<void> _save() async {
     final provider = context.read<MissionProvider>();
     final mission = provider.currentMission;
@@ -157,12 +186,22 @@ class _ATabState extends State<ATab> {
 
       // Sync Maßnahmen → Measures-Tab
       if (_mGuedel) {
-        final notes = _selectedGuedelSize != null ? 'Größe: $_selectedGuedelSize' : null;
-        await provider.ensureMeasureExists(MeasureType.guedeltubus, notes: notes);
+        final notes = _selectedGuedelSize != null
+            ? 'Größe: $_selectedGuedelSize'
+            : null;
+        await provider.ensureMeasureExists(
+          MeasureType.guedeltubus,
+          notes: notes,
+        );
       }
       if (_mWendl) {
-        final notes = _selectedWendlSize != null ? 'Größe: $_selectedWendlSize' : null;
-        await provider.ensureMeasureExists(MeasureType.wendltubus, notes: notes);
+        final notes = _selectedWendlSize != null
+            ? 'Größe: $_selectedWendlSize'
+            : null;
+        await provider.ensureMeasureExists(
+          MeasureType.wendltubus,
+          notes: notes,
+        );
       }
       if (_mSuction) {
         await provider.ensureMeasureExists(MeasureType.absaugen);
@@ -189,11 +228,10 @@ class _ATabState extends State<ATab> {
     }
   }
 
-  
   @override
   Widget build(BuildContext context) {
     final showMeasures = _airwayThreatened;
-    
+
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
@@ -213,7 +251,7 @@ class _ATabState extends State<ATab> {
                   style: TextStyle(fontSize: 13, color: Colors.grey),
                 ),
                 const SizedBox(height: 16),
-                
+
                 SwitchListTile(
                   value: _airwayPatent,
                   onChanged: (value) {
@@ -228,7 +266,7 @@ class _ATabState extends State<ATab> {
                     color: _airwayPatent ? AppColors.success : Colors.grey,
                   ),
                 ),
-                
+
                 SwitchListTile(
                   value: _airwayThreatened,
                   onChanged: (value) {
@@ -243,9 +281,9 @@ class _ATabState extends State<ATab> {
                     color: _airwayThreatened ? AppColors.warning : Colors.grey,
                   ),
                 ),
-                
+
                 const SizedBox(height: 12),
-                
+
                 TextFormField(
                   controller: _airwayIssueController,
                   decoration: const InputDecoration(
@@ -255,8 +293,8 @@ class _ATabState extends State<ATab> {
                   ),
                   maxLines: 2,
                 ),
-                
-                const SizedBox(height: 16),                
+
+                const SizedBox(height: 16),
                 // Medikamente Sektion mit Widget
                 MedicationsSectionWidget(
                   title: 'Medikamente bei A',
@@ -267,12 +305,12 @@ class _ATabState extends State<ATab> {
                     // Widget wird automatisch neu gerendert
                   },
                 ),
-                
-                const SizedBox(height: 16),                
-                if (showMeasures) _buildMeasuresCard(context),
-                
+
                 const SizedBox(height: 16),
-                
+                if (showMeasures) _buildMeasuresCard(context),
+
+                const SizedBox(height: 16),
+
                 ElevatedButton.icon(
                   onPressed: _save,
                   icon: const Icon(Icons.save),
@@ -285,7 +323,7 @@ class _ATabState extends State<ATab> {
       ],
     );
   }
-  
+
   Widget _buildMeasuresCard(BuildContext context) {
     return Card(
       color: Theme.of(context).brightness == Brightness.dark
@@ -299,12 +337,12 @@ class _ATabState extends State<ATab> {
           children: [
             Text(
               'Maßnahmen bei bedrohtem Atemweg',
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
+              style: Theme.of(
+                context,
+              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 8),
-            
+
             CheckboxListTile(
               value: _mHeadTilt,
               onChanged: (v) => setState(() => _mHeadTilt = v ?? false),
@@ -329,66 +367,68 @@ class _ATabState extends State<ATab> {
               title: const Text('Absaugen'),
               dense: true,
             ),
-            
+
             const Divider(height: 24),
-            
+
             CheckboxListTile(
               value: _mGuedel,
               onChanged: (v) => setState(() => _mGuedel = v ?? false),
               title: const Text('Guedeltubus'),
               dense: true,
             ),
-            if (_mGuedel) Padding(
-              padding: const EdgeInsets.only(left: 16, bottom: 8),
-              child: Wrap(
-                spacing: 8,
-                children: _guedelSizes.map((s) {
-                  final selected = _selectedGuedelSize == s;
-                  return ChoiceChip(
-                    label: Text('Größe $s'),
-                    selected: selected,
-                    selectedColor: AppColors.primary,
-                    labelStyle: TextStyle(
-                      color: selected ? Colors.white : null,
-                    ),
-                    onSelected: (_) {
-                      setState(() {
-                        _selectedGuedelSize = s;
-                      });
-                    },
-                  );
-                }).toList(),
+            if (_mGuedel)
+              Padding(
+                padding: const EdgeInsets.only(left: 16, bottom: 8),
+                child: Wrap(
+                  spacing: 8,
+                  children: _guedelSizes.map((s) {
+                    final selected = _selectedGuedelSize == s;
+                    return ChoiceChip(
+                      label: Text('Größe $s'),
+                      selected: selected,
+                      selectedColor: AppColors.primary,
+                      labelStyle: TextStyle(
+                        color: selected ? Colors.white : null,
+                      ),
+                      onSelected: (_) {
+                        setState(() {
+                          _selectedGuedelSize = s;
+                        });
+                      },
+                    );
+                  }).toList(),
+                ),
               ),
-            ),
-            
+
             CheckboxListTile(
               value: _mWendl,
               onChanged: (v) => setState(() => _mWendl = v ?? false),
               title: const Text('Wendltubus'),
               dense: true,
             ),
-            if (_mWendl) Padding(
-              padding: const EdgeInsets.only(left: 16),
-              child: Wrap(
-                spacing: 8,
-                children: _wendlSizes.map((s) {
-                  final selected = _selectedWendlSize == s;
-                  return ChoiceChip(
-                    label: Text('$s'),
-                    selected: selected,
-                    selectedColor: AppColors.primary,
-                    labelStyle: TextStyle(
-                      color: selected ? Colors.white : null,
-                    ),
-                    onSelected: (_) {
-                      setState(() {
-                        _selectedWendlSize = s;
-                      });
-                    },
-                  );
-                }).toList(),
+            if (_mWendl)
+              Padding(
+                padding: const EdgeInsets.only(left: 16),
+                child: Wrap(
+                  spacing: 8,
+                  children: _wendlSizes.map((s) {
+                    final selected = _selectedWendlSize == s;
+                    return ChoiceChip(
+                      label: Text('$s'),
+                      selected: selected,
+                      selectedColor: AppColors.primary,
+                      labelStyle: TextStyle(
+                        color: selected ? Colors.white : null,
+                      ),
+                      onSelected: (_) {
+                        setState(() {
+                          _selectedWendlSize = s;
+                        });
+                      },
+                    );
+                  }).toList(),
+                ),
               ),
-            ),
           ],
         ),
       ),

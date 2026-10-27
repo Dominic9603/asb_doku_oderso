@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../providers/mission_provider.dart';
 import '../models/abcde_assessment.dart';
+import '../../../core/utils/scaffold_messenger_key.dart';
 import 'c_tab.dart';
 import 'a_tab.dart';
 import 'b_tab.dart';
@@ -21,6 +22,13 @@ class CABCDENavTab extends StatefulWidget {
 class _CABCDENavTabState extends State<CABCDENavTab>
     with SingleTickerProviderStateMixin {
   late TabController _subTabController;
+
+  // Keys auf die A/B/C-Tabs, damit "Baseline erneut erheben" ihre lokalen
+  // Eingabefelder gezielt zurücksetzen kann, ohne die übrigen Tabs (c, D, E,
+  // CPR) oder deren ggf. ungespeicherte Eingaben zu beeinflussen.
+  final _aTabKey = GlobalKey<ATabState>();
+  final _bTabKey = GlobalKey<BTabState>();
+  final _c2TabKey = GlobalKey<C2TabState>();
 
   @override
   void initState() {
@@ -115,6 +123,24 @@ class _CABCDENavTabState extends State<CABCDENavTab>
         (a.cprMedications != null && a.cprMedications!.isNotEmpty);
   }
 
+  Future<void> _startNewBaseline() async {
+    await context.read<MissionProvider>().startNewBaseline();
+    // Lokale Eingabefelder der A/B/C-Tabs leeren, da der neue (leere)
+    // Datensatz sonst erst beim nächsten Öffnen dieser Tabs geladen würde.
+    _aTabKey.currentState?.resetToDefaults();
+    _bTabKey.currentState?.resetToDefaults();
+    _c2TabKey.currentState?.resetToDefaults();
+    // Springe zum A-Tab, damit direkt mit der Neuerhebung begonnen werden kann.
+    _subTabController.animateTo(1);
+    scaffoldMessengerKey.currentState?.showSnackBar(
+      const SnackBar(
+        content: Text(
+          'Neue Baseline gestartet – bitte A, B und C erneut beurteilen.',
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     // watch() statt read(), damit die Tab-Beschriftungen sofort nach dem
@@ -136,31 +162,42 @@ class _CABCDENavTabState extends State<CABCDENavTab>
         Material(
           color: Theme.of(context).cardColor,
           elevation: 2,
-          child: TabBar(
-            controller: _subTabController,
-            isScrollable: true,
-            tabs: [
-              Tab(child: _tabLabel('c', _isCDone(abcde))),
-              Tab(child: _tabLabel('A', _isADone(abcde))),
-              Tab(child: _tabLabel('B', _isBDone(abcde))),
-              Tab(child: _tabLabel('C', _isC2Done(abcde))),
-              Tab(child: _tabLabel('D', _isDDone(abcde))),
-              Tab(child: _tabLabel('E', _isEDone(abcde))),
-              Tab(child: _tabLabel('CPR', _isCPRDone(abcde))),
+          child: Row(
+            children: [
+              Expanded(
+                child: TabBar(
+                  controller: _subTabController,
+                  isScrollable: true,
+                  tabs: [
+                    Tab(child: _tabLabel('c', _isCDone(abcde))),
+                    Tab(child: _tabLabel('A', _isADone(abcde))),
+                    Tab(child: _tabLabel('B', _isBDone(abcde))),
+                    Tab(child: _tabLabel('C', _isC2Done(abcde))),
+                    Tab(child: _tabLabel('D', _isDDone(abcde))),
+                    Tab(child: _tabLabel('E', _isEDone(abcde))),
+                    Tab(child: _tabLabel('CPR', _isCPRDone(abcde))),
+                  ],
+                ),
+              ),
+              IconButton(
+                icon: const Icon(Icons.restart_alt),
+                tooltip: 'Baseline erneut erheben (A, B, C)',
+                onPressed: _startNewBaseline,
+              ),
             ],
           ),
         ),
         Expanded(
           child: TabBarView(
             controller: _subTabController,
-            children: const [
-              CTab(),
-              ATab(),
-              BTab(),
-              C2Tab(),
-              DTab(),
-              ETab(),
-              CPRTab(),
+            children: [
+              const CTab(),
+              ATab(key: _aTabKey),
+              BTab(key: _bTabKey),
+              C2Tab(key: _c2TabKey),
+              const DTab(),
+              const ETab(),
+              const CPRTab(),
             ],
           ),
         ),
