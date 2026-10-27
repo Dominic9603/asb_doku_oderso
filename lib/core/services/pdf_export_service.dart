@@ -300,31 +300,21 @@ class PDFExportService {
         );
       }
 
-      // A - Airway
-      if (assessment.aDocumented) {
-        currentY = _drawField(
-          page,
-          'Atemweg',
+      // A - Airway: Status, Problem und Maßnahmen als eine zusammenhängende
+      // Zeile, damit kein leeres "Problem"-Label erscheint, wenn dort nichts
+      // eingetragen wurde.
+      final airwayParts = <String>[
+        if (assessment.aDocumented)
           assessment.airwayThreatened ? 'bedroht' : 'frei',
-          normalFont,
-          margin,
-          currentY,
-          pageWidth,
-        );
-      }
+        if (assessment.airwayIssue?.isNotEmpty ?? false)
+          assessment.airwayIssue!,
+        if (assessment.airwayIntervention?.isNotEmpty ?? false)
+          assessment.airwayIntervention!,
+      ];
       currentY = _drawField(
         page,
-        'Atemweg Problem',
-        assessment.airwayIssue,
-        normalFont,
-        margin,
-        currentY,
-        pageWidth,
-      );
-      currentY = _drawField(
-        page,
-        'Atemweg Maßn.',
-        assessment.airwayIntervention,
+        'A',
+        airwayParts.isNotEmpty ? airwayParts.join(' | ') : null,
         normalFont,
         margin,
         currentY,
@@ -348,29 +338,15 @@ class PDFExportService {
         if (assessment.breathingSounds?.isNotEmpty ?? false)
           'Ausku.: ${assessment.breathingSounds}',
         if (!assessment.symmetricBreathing) 'Thoraxexkursion asymmetrisch',
+        if (assessment.breathingIssue?.isNotEmpty ?? false)
+          assessment.breathingIssue!,
+        if (assessment.breathingIntervention?.isNotEmpty ?? false)
+          assessment.breathingIntervention!,
       ];
       currentY = _drawField(
         page,
-        'Atmung',
+        'B',
         breathingParts.isNotEmpty ? breathingParts.join(' | ') : null,
-        normalFont,
-        margin,
-        currentY,
-        pageWidth,
-      );
-      currentY = _drawField(
-        page,
-        'Problem B',
-        assessment.breathingIssue,
-        normalFont,
-        margin,
-        currentY,
-        pageWidth,
-      );
-      currentY = _drawField(
-        page,
-        'Maßn. B',
-        assessment.breathingIntervention,
         normalFont,
         margin,
         currentY,
@@ -397,29 +373,17 @@ class PDFExportService {
           'Haut: ${assessment.skinColor}',
         if (assessment.capillaryRefill?.isNotEmpty ?? false)
           'KFZ: ${assessment.capillaryRefill}',
+        if (assessment.circulationIssue?.isNotEmpty ?? false)
+          assessment.circulationIssue!,
+        if (assessment.circulationIntervention?.isNotEmpty ?? false)
+          assessment.circulationIntervention!,
+        if (assessment.ecgRhythm?.isNotEmpty ?? false)
+          'EKG: ${assessment.ecgRhythm}',
       ];
       currentY = _drawField(
         page,
-        'Zirkulation',
+        'C',
         circParts.isNotEmpty ? circParts.join(' | ') : null,
-        normalFont,
-        margin,
-        currentY,
-        pageWidth,
-      );
-      currentY = _drawField(
-        page,
-        'Problem C',
-        assessment.circulationIssue,
-        normalFont,
-        margin,
-        currentY,
-        pageWidth,
-      );
-      currentY = _drawField(
-        page,
-        'Maßn. C',
-        assessment.circulationIntervention,
         normalFont,
         margin,
         currentY,
@@ -430,15 +394,6 @@ class PDFExportService {
         assessment.circulationMedications,
         normalFont,
         smallFont,
-        margin,
-        currentY,
-        pageWidth,
-      );
-      currentY = _drawField(
-        page,
-        'EKG-Rhythmus',
-        assessment.ecgRhythm,
-        normalFont,
         margin,
         currentY,
         pageWidth,
@@ -455,29 +410,15 @@ class PDFExportService {
         if (assessment.bloodSugar != null) 'BZ: ${assessment.bloodSugar} mg/dl',
         if (assessment.befastResult?.isNotEmpty ?? false)
           'BE-FAST: ${assessment.befastResult}',
+        if (assessment.disabilityIssue?.isNotEmpty ?? false)
+          assessment.disabilityIssue!,
+        if (assessment.disabilityIntervention?.isNotEmpty ?? false)
+          assessment.disabilityIntervention!,
       ];
       currentY = _drawField(
         page,
-        'Neurologie',
+        'D',
         disParts.isNotEmpty ? disParts.join(' | ') : null,
-        normalFont,
-        margin,
-        currentY,
-        pageWidth,
-      );
-      currentY = _drawField(
-        page,
-        'Problem D',
-        assessment.disabilityIssue,
-        normalFont,
-        margin,
-        currentY,
-        pageWidth,
-      );
-      currentY = _drawField(
-        page,
-        'Maßn. D',
-        assessment.disabilityIntervention,
         normalFont,
         margin,
         currentY,
@@ -501,29 +442,15 @@ class PDFExportService {
           'Verletz.: ${assessment.injuries}',
         if (assessment.environmentalFactors?.isNotEmpty ?? false)
           'Umgebung: ${assessment.environmentalFactors}',
+        if (assessment.exposureIssue?.isNotEmpty ?? false)
+          assessment.exposureIssue!,
+        if (assessment.exposureIntervention?.isNotEmpty ?? false)
+          assessment.exposureIntervention!,
       ];
       currentY = _drawField(
         page,
-        'Exposition',
+        'E',
         expParts.isNotEmpty ? expParts.join(' | ') : null,
-        normalFont,
-        margin,
-        currentY,
-        pageWidth,
-      );
-      currentY = _drawField(
-        page,
-        'Problem E',
-        assessment.exposureIssue,
-        normalFont,
-        margin,
-        currentY,
-        pageWidth,
-      );
-      currentY = _drawField(
-        page,
-        'Maßn. E',
-        assessment.exposureIntervention,
         normalFont,
         margin,
         currentY,
@@ -694,7 +621,7 @@ class PDFExportService {
           if (entry.aDocumented) {
             currentY = _drawField(
               page,
-              'Atemweg',
+              'A',
               entry.airwayThreatened ? 'bedroht' : 'frei',
               normalFont,
               margin,
@@ -712,7 +639,7 @@ class PDFExportService {
           ];
           currentY = _drawField(
             page,
-            'Atmung',
+            'B',
             historyBreathingParts.isNotEmpty
                 ? historyBreathingParts.join(' | ')
                 : null,
@@ -734,7 +661,7 @@ class PDFExportService {
           ];
           currentY = _drawField(
             page,
-            'Zirkulation',
+            'C',
             historyCircParts.isNotEmpty ? historyCircParts.join(' | ') : null,
             normalFont,
             margin,
